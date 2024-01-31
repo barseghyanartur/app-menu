@@ -25,6 +25,19 @@ double click it and simply drag the ``ApplicationMenu`` into the
   :width: 400
   :alt: AppMenu installation
 
+Configuration
+=============
+By default, Application Menu does not have access to user specific 
+``Applications`` directory (located in the 
+``~/Users/<username>/Applications``). In order to be able to list 
+those applications in the Application Menu, you will need to grant 
+access to mentioned directory. That can be done in the application ``Settings``, 
+as shown below:
+
+.. image:: Docs/app_menu_configuration_dir_access.jpg
+  :width: 400
+  :alt: AppMenu configuration Applications directory access
+
 Credits
 =======
 The application icon has been taken from the amazing `tabler icons`_ 
