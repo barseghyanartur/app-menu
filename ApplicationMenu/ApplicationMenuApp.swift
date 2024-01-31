@@ -30,10 +30,38 @@ class DirectoryAccess {
         openPanel.begin { response in
             if response == .OK, let url = openPanel.urls.first {
                 // Save access rights here if needed
-                completion(url)
+                do {
+                    let bookmarkData = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+                    UserDefaults.standard.set(bookmarkData, forKey: "userSelectedDirectory")
+                    completion(url)
+                } catch {
+                    print("Error creating bookmark: \(error)")
+                    completion(nil)
+                }
             } else {
                 completion(nil)
             }
+        }
+    }
+
+    static func restoreAccess() -> URL? {
+        guard let bookmarkData = UserDefaults.standard.data(forKey: "userSelectedDirectory") else {
+            return nil
+        }
+
+        var isStale = false
+        do {
+            let url = try URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
+            if isStale {
+                // Handle stale bookmark if needed
+            }
+            if !url.startAccessingSecurityScopedResource() {
+                // Handle failure to access resource
+            }
+            return url
+        } catch {
+            print("Error restoring bookmark: \(error)")
+            return nil
         }
     }
 }
@@ -164,10 +192,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu = NSMenu()
         statusItem?.menu = menu
-        populateMenu()
-        
-        configureMenuBarItem()
-        
+
+        if let url = DirectoryAccess.restoreAccess() {
+            // Use the URL to access the directory
+            // Perform necessary file operations here
+            populateMenu()
+            configureMenuBarItem()
+
+            // When finished:
+            url.stopAccessingSecurityScopedResource()
+        }
+
         // Listen for changes
         NotificationCenter.default.addObserver(self, selector: #selector(configureMenuBarItem), name: NSNotification.Name("MenuOptionChanged"), object: nil)
     
