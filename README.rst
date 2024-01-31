@@ -5,6 +5,10 @@ app-menu
 
 .. _Releases: https://github.com/barseghyanartur/app-menu/releases/
 
+.. External references
+
+..tabler icons: https://github.com/tabler/tabler-icons
+
 The missing Application Menu for macOs.
 
 .. image:: Docs/app_menu_screenshot.jpg
@@ -20,6 +24,11 @@ double click it and simply drag the ``ApplicationMenu`` into the
 .. image:: Docs/app_menu_installation.jpg
   :width: 400
   :alt: AppMenu installation
+
+Credits
+=======
+The application icon has been taken from the amazing `tabler icons`_ 
+(``MIT`` licensed).
 
 License
 =======
