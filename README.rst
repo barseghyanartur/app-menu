@@ -34,6 +34,12 @@ License
 =======
 MIT
 
+Support
+=======
+For security issues contact me at the e-mail given in the `Author`_ section.
+
+For overall issues, go to `GitHub <https://github.com/barseghyanartur/app-manu/issues>`_.
+
 Author
 ======
 Artur Barseghyan <artur.barseghyan@gmail.com>
