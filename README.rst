@@ -38,6 +38,9 @@ as shown below:
   :width: 400
   :alt: AppMenu configuration Applications directory access
 
+After you have granted the access, make sure to refresh the applications list
+(click on the ``Refresh`` item in the menu).
+
 Credits
 =======
 The application icon has been taken from the amazing `tabler icons`_ 
