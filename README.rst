@@ -17,6 +17,10 @@ Go to `Releases`_ and download the latest ``ApplicationMenu.dmg`` file,
 double click it and simply drag the ``ApplicationMenu`` into the 
 ``Applications`` directory.
 
+.. image:: Docs/app_menu_installation.jpg
+  :width: 400
+  :alt: AppMenu installation
+
 License
 =======
 MIT
