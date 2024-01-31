@@ -7,7 +7,7 @@ app-menu
 
 .. External references
 
-..tabler icons: https://github.com/tabler/tabler-icons
+.. _tabler icons: https://github.com/tabler/tabler-icons
 
 The missing Application Menu for macOs.
 
