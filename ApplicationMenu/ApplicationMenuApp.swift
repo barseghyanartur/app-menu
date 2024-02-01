@@ -64,6 +64,10 @@ class DirectoryAccess {
             return nil
         }
     }
+    
+    static func retractAccess() {
+        UserDefaults.standard.removeObject(forKey: "userSelectedDirectory")
+    }
 }
 
 @main
@@ -98,21 +102,34 @@ struct AppearanceSettingsView: View {
 
 struct DirectoryAccessView: View {
     @State private var selectedDirectory: URL?
+    @State private var accessGranted: Bool = UserDefaults.standard.data(forKey: "userSelectedDirectory") != nil
 
     var body: some View {
         VStack {
             Text("Directory Access")
                 .font(.headline)
-
-            Button("Grant Access to Applications Directory") {
-                DirectoryAccess.requestAccess { url in
-                    self.selectedDirectory = url
-                    // Handle the URL as needed, such as saving access rights
+            
+            if accessGranted {
+                Button("Retract Access to Applications Directory") {
+                    DirectoryAccess.retractAccess()
+                    self.accessGranted = false
+                    self.selectedDirectory = nil
+                    // Additional logic if needed when access is retracted
+                }
+            } else {
+                Button("Grant Access to Applications Directory") {
+                    DirectoryAccess.requestAccess { url in
+                        self.selectedDirectory = url
+                        self.accessGranted = url != nil
+                        // Save the bookmark or handle the URL as needed
+                    }
                 }
             }
 
             if let selectedDirectory = selectedDirectory {
                 Text("Access granted to: \(selectedDirectory.path)")
+            } else if accessGranted {
+                Text("Access previously granted.")
             }
         }
         .padding()
@@ -201,6 +218,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // When finished:
             url.stopAccessingSecurityScopedResource()
+        } else {
+            populateMenu()
+            configureMenuBarItem()
         }
 
         // Listen for changes
@@ -325,7 +345,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // Refresh menu action
     @objc func refreshMenu(_ sender: NSMenuItem) {
         menu?.removeAllItems()
-        populateMenu()
+        if let url = DirectoryAccess.restoreAccess() {
+            // Use the URL to access the directory
+            // Perform necessary file operations here
+            populateMenu()
+
+            // When finished:
+            url.stopAccessingSecurityScopedResource()
+        } else {
+            populateMenu()
+        }
     }
 
     @objc func quitApp(_ sender: NSMenuItem) {
@@ -402,8 +431,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func openApp(_ sender: NSMenuItem) {
-        if let appPath = sender.representedObject as? String {
-            NSWorkspace.shared.open(URL(fileURLWithPath: appPath))
+        if let url = DirectoryAccess.restoreAccess() {
+            // Use the URL to access the directory
+            // Perform necessary file operations here
+            if let appPath = sender.representedObject as? String {
+                NSWorkspace.shared.open(URL(fileURLWithPath: appPath))
+            }
+
+            // When finished:
+            url.stopAccessingSecurityScopedResource()
+        } else {
+            if let appPath = sender.representedObject as? String {
+                NSWorkspace.shared.open(URL(fileURLWithPath: appPath))
+            }
         }
     }
 }
