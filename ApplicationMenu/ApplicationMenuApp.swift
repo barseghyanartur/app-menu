@@ -29,7 +29,7 @@ class DirectoryAccess {
 
         openPanel.begin { response in
             if response == .OK, let url = openPanel.urls.first {
-                // Save access rights here if needed
+                // Save access rights
                 do {
                     let bookmarkData = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
                     UserDefaults.standard.set(bookmarkData, forKey: "userSelectedDirectory")
@@ -53,10 +53,10 @@ class DirectoryAccess {
         do {
             let url = try URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
             if isStale {
-                // Handle stale bookmark if needed
+                // TODO: Handle stale bookmark
             }
             if !url.startAccessingSecurityScopedResource() {
-                // Handle failure to access resource
+                // TODO: Handle failure to access resource
             }
             return url
         } catch {
@@ -96,7 +96,6 @@ struct AppearanceSettingsView: View {
             }.pickerStyle(RadioGroupPickerStyle())
         }
         .frame(width: 400, height: 100)
-        // Add more settings here as needed
     }
 }
 
@@ -114,14 +113,12 @@ struct DirectoryAccessView: View {
                     DirectoryAccess.retractAccess()
                     self.accessGranted = false
                     self.selectedDirectory = nil
-                    // Additional logic if needed when access is retracted
                 }
             } else {
                 Button("Grant Access to Applications Directory") {
                     DirectoryAccess.requestAccess { url in
                         self.selectedDirectory = url
                         self.accessGranted = url != nil
-                        // Save the bookmark or handle the URL as needed
                     }
                 }
             }
@@ -171,41 +168,27 @@ struct SettingsView: View {
     func saveSettings() {
         // Save the settings using UserDefaults
         UserDefaults.standard.set(selectedOption, forKey: "menuBarOption")
-        // Optionally, post a notification if you want to trigger an immediate update
+        // Post a notification to trigger an immediate update
         NotificationCenter.default.post(name: NSNotification.Name("MenuOptionChanged"), object: nil)
-        // Close the settings window or navigate away
     }
 }
 
 struct AboutView: View {
     var body: some View {
         TabView {
-            AuthorView()
+            LicenseView()
                 .tabItem {
-                    Text("Author")
+                    Text("License")
                 }
-            
+
             CreditsView()
                 .tabItem {
                     Text("Credits")
                 }
             
-            LicenseView()
-                .tabItem {
-                    Text("License")
-                }
         }
         .frame(width: 400, height: 300)
         .padding()
-    }
-}
-
-struct AuthorView: View {
-    var body: some View {
-        ScrollView {
-            Text("Artur Barseghyan <artur.barseghyan@gmail.com>")
-                .padding()
-        }
     }
 }
 
@@ -225,6 +208,8 @@ struct LicenseView: View {
             MIT License
 
             Copyright (c) 2024 Artur Barseghyan
+
+            https://github.com/barseghyanartur/app-menu/
 
             Permission is hereby granted, free of charge, to any person obtaining a copy
             of this software and associated documentation files (the "Software"), to deal
@@ -298,7 +283,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
-            // Perform necessary file operations here
             populateMenu()
             configureMenuBarItem()
 
@@ -322,16 +306,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             statusItem?.button?.title = "Apps"
             statusItem?.button?.image = nil
         case 1:
-            // Code to display only icon
-            // Ensure you have an icon set up
-            if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
+            // Display only icon
+            if let iconImage = NSImage(named: "AppIcon") {
                 let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
                 statusItem?.button?.image = resizedIcon
                 statusItem?.button?.title = ""
             }
         case 2:
-            // Code to display text and icon
-            if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
+            // Display text and icon
+            if let iconImage = NSImage(named: "AppIcon") {
                 let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
                 statusItem?.button?.image = resizedIcon
                 statusItem?.button?.title = "Apps"
@@ -421,6 +404,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settingsMenuItem.target = self
         menu?.addItem(settingsMenuItem)
         
+        // Add "About" menu item
         let aboutMenuItem = NSMenuItem(title: "About", action: #selector(showAbout(_:)), keyEquivalent: "")
         aboutMenuItem.target = self
         menu?.addItem(aboutMenuItem)
@@ -429,8 +413,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let quitMenuItem = NSMenuItem(title: "Quit", action: #selector(quitApp(_:)), keyEquivalent: "q")
         quitMenuItem.target = self
         menu?.addItem(quitMenuItem)
-
-        // Add more menu items here as needed
     }
 
     // Refresh menu action
@@ -438,7 +420,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu?.removeAllItems()
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
-            // Perform necessary file operations here
             populateMenu()
 
             // When finished:
@@ -524,7 +505,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func openApp(_ sender: NSMenuItem) {
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
-            // Perform necessary file operations here
             if let appPath = sender.representedObject as? String {
                 NSWorkspace.shared.open(URL(fileURLWithPath: appPath))
             }
