@@ -95,7 +95,7 @@ struct AppearanceSettingsView: View {
                 Text("Text & Icon").tag(2)
             }.pickerStyle(RadioGroupPickerStyle())
         }
-        .frame(width: 300, height: 100)
+        .frame(width: 400, height: 100)
         // Add more settings here as needed
     }
 }
@@ -177,10 +177,84 @@ struct SettingsView: View {
     }
 }
 
+struct AboutView: View {
+    var body: some View {
+        TabView {
+            AuthorView()
+                .tabItem {
+                    Text("Author")
+                }
+            
+            CreditsView()
+                .tabItem {
+                    Text("Credits")
+                }
+            
+            LicenseView()
+                .tabItem {
+                    Text("License")
+                }
+        }
+        .frame(width: 400, height: 300)
+        .padding()
+    }
+}
+
+struct AuthorView: View {
+    var body: some View {
+        ScrollView {
+            Text("Artur Barseghyan <artur.barseghyan@gmail.com>")
+                .padding()
+        }
+    }
+}
+
+struct CreditsView: View {
+    var body: some View {
+        ScrollView {
+            Text("The application icon has been taken from the amazing `tabler icons` (MIT licensed).")
+                .padding()
+        }
+    }
+}
+
+struct LicenseView: View {
+    var body: some View {
+        ScrollView {
+            Text("""
+            MIT License
+
+            Copyright (c) 2024 Artur Barseghyan
+
+            Permission is hereby granted, free of charge, to any person obtaining a copy
+            of this software and associated documentation files (the "Software"), to deal
+            in the Software without restriction, including without limitation the rights
+            to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+            copies of the Software, and to permit persons to whom the Software is
+            furnished to do so, subject to the following conditions:
+
+            The above copyright notice and this permission notice shall be included in all
+            copies or substantial portions of the Software.
+
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            SOFTWARE.
+            """)
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var menu: NSMenu?
     var settingsWindow: NSWindow?
+    var aboutWindow: NSWindow?
 
     @objc func openSettings(_ sender: NSMenuItem) {
         if settingsWindow == nil {
@@ -201,6 +275,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 settingsWindow.makeKeyAndOrderFront(nil) // Make the settings window the key window and bring it to the front
             }
         }
+    }
+
+    @objc func showAbout(_ sender: NSMenuItem) {
+        if aboutWindow == nil {
+            let aboutView = AboutView()
+            let hostingController = NSHostingController(rootView: aboutView)
+            aboutWindow = NSWindow(contentViewController: hostingController)
+            aboutWindow?.title = "About"
+        }
+        
+        NSApp.activate(ignoringOtherApps: true)
+        aboutWindow?.makeKeyAndOrderFront(nil)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -229,32 +315,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func configureMenuBarItem() {
-            let menuBarOption = UserDefaults.standard.integer(forKey: "menuBarOption")
-            switch menuBarOption {
-            case 0:
-                // Code to display only text
-                statusItem?.button?.title = "Apps"
-                statusItem?.button?.image = nil
-            case 1:
-                // Code to display only icon
-                // Ensure you have an icon set up
-                if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
-                    let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
-                    statusItem?.button?.image = resizedIcon
-                    statusItem?.button?.title = ""
-                }
-            case 2:
-                // Code to display text and icon
-                if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
-                    let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
-                    statusItem?.button?.image = resizedIcon
-                    statusItem?.button?.title = "Apps"
-                }
-            default:
-                // Default case
+        let menuBarOption = UserDefaults.standard.integer(forKey: "menuBarOption")
+        switch menuBarOption {
+        case 0:
+            // Code to display only text
+            statusItem?.button?.title = "Apps"
+            statusItem?.button?.image = nil
+        case 1:
+            // Code to display only icon
+            // Ensure you have an icon set up
+            if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
+                let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
+                statusItem?.button?.image = resizedIcon
+                statusItem?.button?.title = ""
+            }
+        case 2:
+            // Code to display text and icon
+            if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
+                let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
+                statusItem?.button?.image = resizedIcon
                 statusItem?.button?.title = "Apps"
             }
+        default:
+            // Default case
+            statusItem?.button?.title = "Apps"
         }
+    }
 
     func populateMenu() {
         let fileManager = FileManager.default
@@ -307,6 +393,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Add a separator line
         menu?.addItem(NSMenuItem.separator())
         
+        // All apps
         let allGroupMenu = NSMenu()
         for (appName, icon, fullPath) in allApps.sorted(by: { $0.0 < $1.0 }) {
             let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
@@ -333,6 +420,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let settingsMenuItem = NSMenuItem(title: "Settings", action: #selector(openSettings(_:)), keyEquivalent: "")
         settingsMenuItem.target = self
         menu?.addItem(settingsMenuItem)
+        
+        let aboutMenuItem = NSMenuItem(title: "About", action: #selector(showAbout(_:)), keyEquivalent: "")
+        aboutMenuItem.target = self
+        menu?.addItem(aboutMenuItem)
 
         // Add "Quit" menu item
         let quitMenuItem = NSMenuItem(title: "Quit", action: #selector(quitApp(_:)), keyEquivalent: "q")
