@@ -295,7 +295,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Listen for changes
         NotificationCenter.default.addObserver(self, selector: #selector(configureMenuBarItem), name: NSNotification.Name("MenuOptionChanged"), object: nil)
-    
     }
 
     @objc func configureMenuBarItem() {
@@ -330,8 +329,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
 //        let userApplicationsDir = homeDirectory + "/Applications"
         let userApplicationsDir = URL.userHome.path + "/Applications"
+        let chromeApplicationsDir = userApplicationsDir + "/Chrome Apps.localized"
 
         let appDirectories = ["/Applications", "/System/Applications", userApplicationsDir]
+        
+        // TODO: If needed, add Chrome Apps here
+
         print("appDirectories: \(appDirectories)") // Debug log
         var appGroups = [String: [(String, NSImage?, String)]]() // Store the full path
         var allApps = [(String, NSImage?, String)]() // Array to hold all apps
