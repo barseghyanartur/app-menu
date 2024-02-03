@@ -133,6 +133,18 @@ struct DirectoryAccessView: View {
     }
 }
 
+struct ChromeAppsSettingsView: View {
+    @AppStorage("showChromeApps") private var showChromeApps: Bool = false
+
+    var body: some View {
+        Form {
+            Toggle("Show Chrome Apps", isOn: $showChromeApps)
+        }
+        .padding()
+        .frame(width: 300, height: 100)
+    }
+}
+
 struct SettingsView: View {
     @State private var selectedOption: Int = UserDefaults.standard.integer(forKey: "menuBarOption")
     @Environment(\.presentationMode) var presentationMode
@@ -147,6 +159,10 @@ struct SettingsView: View {
                 DirectoryAccessView()
                     .tabItem {
                         Label("Directory Access", systemImage: "folder")
+                    }
+                ChromeAppsSettingsView()
+                    .tabItem {
+                        Label("Chrome Apps", systemImage: "folder")
                     }
             }
             .padding()
@@ -195,8 +211,11 @@ struct AboutView: View {
 struct CreditsView: View {
     var body: some View {
         ScrollView {
-            Text("The application icon has been taken from the amazing `tabler icons` (MIT licensed).")
-                .padding()
+            Text("""
+            The application icon has been taken from the amazing
+            [tabler icons](https://github.com/tabler/tabler-icons) (MIT licensed).
+            """)
+            .padding()
         }
     }
 }
@@ -207,9 +226,7 @@ struct LicenseView: View {
             Text("""
             MIT License
 
-            Copyright (c) 2024 Artur Barseghyan
-
-            https://github.com/barseghyanartur/app-menu/
+            Copyright (c) 2024 [Artur Barseghyan](https://github.com/barseghyanartur/app-menu/)
 
             Permission is hereby granted, free of charge, to any person obtaining a copy
             of this software and associated documentation files (the "Software"), to deal
@@ -328,16 +345,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let fileManager = FileManager.default
 //        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
 //        let userApplicationsDir = homeDirectory + "/Applications"
-        let userApplicationsDir = URL.userHome.path + "/Applications"
-        let chromeApplicationsDir = userApplicationsDir + "/Chrome Apps.localized"
+        let userAppsDir = URL.userHome.path + "/Applications"
+        let chromeAppsDir = userAppsDir + "/Chrome Apps.localized"
 
-        let appDirectories = ["/Applications", "/System/Applications", userApplicationsDir]
+        let appDirectories = ["/Applications", "/System/Applications", userAppsDir]
         
         // TODO: If needed, add Chrome Apps here
 
         print("appDirectories: \(appDirectories)") // Debug log
         var appGroups = [String: [(String, NSImage?, String)]]() // Store the full path
         var allApps = [(String, NSImage?, String)]() // Array to hold all apps
+        var chromeApps = [(String, NSImage?, String)]() // Array to hold chrome apps
 
         for appDir in appDirectories {
             do {
@@ -356,6 +374,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        do {
+            let appContents = try fileManager.contentsOfDirectory(atPath: chromeAppsDir)
+            for appName in appContents where appName.hasSuffix(".app") {
+                let appPath = chromeAppsDir + "/" + appName
+                print("Checking app at path: \(appPath)") // Debug log
+                let (category, appName, icon) = fetchAppDetails(atPath: appPath)
+                let humanReadableCategory = makeHumanReadable(category)
+                chromeApps.append((appName, icon, appPath)) // Store full path here
+            }
+        } catch {
+            print("Error reading applications directory (\(chromeAppsDir)): \(error)")
+        }
+        
         // Add 'All' category
 //        appGroups["All"] = allApps
 
@@ -374,6 +405,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let groupMenuItem = NSMenuItem(title: category, action: nil, keyEquivalent: "")
             groupMenuItem.submenu = groupMenu
             menu?.addItem(groupMenuItem)
+        }
+        
+        // Chrome apps
+        let showChromeApps = UserDefaults.standard.bool(forKey: "showChromeApps")
+        if showChromeApps {
+            // Add a separator line
+            menu?.addItem(NSMenuItem.separator())
+
+            let chromeGroupMenu = NSMenu()
+            for (appName, icon, fullPath) in chromeApps.sorted(by: { $0.0 < $1.0 }) {
+                let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
+                menuItem.target = self
+                if let iconImage = icon {
+                    menuItem.image = resizeImage(image: iconImage, w: 20, h: 20)
+                }
+                menuItem.representedObject = fullPath // Use the stored full path
+                chromeGroupMenu.addItem(menuItem)
+            }
+            let chromeGroupMenuItem = NSMenuItem(title: "Chrome Apps", action: nil, keyEquivalent: "")
+            chromeGroupMenuItem.submenu = chromeGroupMenu
+            menu?.addItem(chromeGroupMenuItem)
         }
 
         // Add a separator line
