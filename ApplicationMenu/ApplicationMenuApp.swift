@@ -29,7 +29,7 @@ class DirectoryAccess {
 
         openPanel.begin { response in
             if response == .OK, let url = openPanel.urls.first {
-                // Save access rights here if needed
+                // Save access rights
                 do {
                     let bookmarkData = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
                     UserDefaults.standard.set(bookmarkData, forKey: "userSelectedDirectory")
@@ -53,10 +53,10 @@ class DirectoryAccess {
         do {
             let url = try URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
             if isStale {
-                // Handle stale bookmark if needed
+                // TODO: Handle stale bookmark
             }
             if !url.startAccessingSecurityScopedResource() {
-                // Handle failure to access resource
+                // TODO: Handle failure to access resource
             }
             return url
         } catch {
@@ -95,8 +95,7 @@ struct AppearanceSettingsView: View {
                 Text("Text & Icon").tag(2)
             }.pickerStyle(RadioGroupPickerStyle())
         }
-        .frame(width: 300, height: 100)
-        // Add more settings here as needed
+        .frame(width: 400, height: 100)
     }
 }
 
@@ -114,14 +113,12 @@ struct DirectoryAccessView: View {
                     DirectoryAccess.retractAccess()
                     self.accessGranted = false
                     self.selectedDirectory = nil
-                    // Additional logic if needed when access is retracted
                 }
             } else {
                 Button("Grant Access to Applications Directory") {
                     DirectoryAccess.requestAccess { url in
                         self.selectedDirectory = url
                         self.accessGranted = url != nil
-                        // Save the bookmark or handle the URL as needed
                     }
                 }
             }
@@ -171,9 +168,70 @@ struct SettingsView: View {
     func saveSettings() {
         // Save the settings using UserDefaults
         UserDefaults.standard.set(selectedOption, forKey: "menuBarOption")
-        // Optionally, post a notification if you want to trigger an immediate update
+        // Post a notification to trigger an immediate update
         NotificationCenter.default.post(name: NSNotification.Name("MenuOptionChanged"), object: nil)
-        // Close the settings window or navigate away
+    }
+}
+
+struct AboutView: View {
+    var body: some View {
+        TabView {
+            LicenseView()
+                .tabItem {
+                    Text("License")
+                }
+
+            CreditsView()
+                .tabItem {
+                    Text("Credits")
+                }
+            
+        }
+        .frame(width: 400, height: 300)
+        .padding()
+    }
+}
+
+struct CreditsView: View {
+    var body: some View {
+        ScrollView {
+            Text("The application icon has been taken from the amazing `tabler icons` (MIT licensed).")
+                .padding()
+        }
+    }
+}
+
+struct LicenseView: View {
+    var body: some View {
+        ScrollView {
+            Text("""
+            MIT License
+
+            Copyright (c) 2024 Artur Barseghyan
+
+            https://github.com/barseghyanartur/app-menu/
+
+            Permission is hereby granted, free of charge, to any person obtaining a copy
+            of this software and associated documentation files (the "Software"), to deal
+            in the Software without restriction, including without limitation the rights
+            to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+            copies of the Software, and to permit persons to whom the Software is
+            furnished to do so, subject to the following conditions:
+
+            The above copyright notice and this permission notice shall be included in all
+            copies or substantial portions of the Software.
+
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            SOFTWARE.
+            """)
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
     }
 }
 
@@ -181,6 +239,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var menu: NSMenu?
     var settingsWindow: NSWindow?
+    var aboutWindow: NSWindow?
 
     @objc func openSettings(_ sender: NSMenuItem) {
         if settingsWindow == nil {
@@ -203,6 +262,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @objc func showAbout(_ sender: NSMenuItem) {
+        if aboutWindow == nil {
+            let aboutView = AboutView()
+            let hostingController = NSHostingController(rootView: aboutView)
+            aboutWindow = NSWindow(contentViewController: hostingController)
+            aboutWindow?.title = "About"
+        }
+        
+        NSApp.activate(ignoringOtherApps: true)
+        aboutWindow?.makeKeyAndOrderFront(nil)
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem?.button?.title = "Apps"
@@ -212,7 +283,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
-            // Perform necessary file operations here
             populateMenu()
             configureMenuBarItem()
 
@@ -225,44 +295,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Listen for changes
         NotificationCenter.default.addObserver(self, selector: #selector(configureMenuBarItem), name: NSNotification.Name("MenuOptionChanged"), object: nil)
-    
     }
 
     @objc func configureMenuBarItem() {
-            let menuBarOption = UserDefaults.standard.integer(forKey: "menuBarOption")
-            switch menuBarOption {
-            case 0:
-                // Code to display only text
-                statusItem?.button?.title = "Apps"
-                statusItem?.button?.image = nil
-            case 1:
-                // Code to display only icon
-                // Ensure you have an icon set up
-                if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
-                    let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
-                    statusItem?.button?.image = resizedIcon
-                    statusItem?.button?.title = ""
-                }
-            case 2:
-                // Code to display text and icon
-                if let iconImage = NSImage(named: "AppIcon") { // Replace with your icon
-                    let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
-                    statusItem?.button?.image = resizedIcon
-                    statusItem?.button?.title = "Apps"
-                }
-            default:
-                // Default case
+        let menuBarOption = UserDefaults.standard.integer(forKey: "menuBarOption")
+        switch menuBarOption {
+        case 0:
+            // Code to display only text
+            statusItem?.button?.title = "Apps"
+            statusItem?.button?.image = nil
+        case 1:
+            // Display only icon
+            if let iconImage = NSImage(named: "AppIcon") {
+                let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
+                statusItem?.button?.image = resizedIcon
+                statusItem?.button?.title = ""
+            }
+        case 2:
+            // Display text and icon
+            if let iconImage = NSImage(named: "AppIcon") {
+                let resizedIcon = resizeImage(image: iconImage, w: 16, h: 16, isTemplate: true)
+                statusItem?.button?.image = resizedIcon
                 statusItem?.button?.title = "Apps"
             }
+        default:
+            // Default case
+            statusItem?.button?.title = "Apps"
         }
+    }
 
     func populateMenu() {
         let fileManager = FileManager.default
 //        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
 //        let userApplicationsDir = homeDirectory + "/Applications"
         let userApplicationsDir = URL.userHome.path + "/Applications"
+        let chromeApplicationsDir = userApplicationsDir + "/Chrome Apps.localized"
 
         let appDirectories = ["/Applications", "/System/Applications", userApplicationsDir]
+        
+        // TODO: If needed, add Chrome Apps here
+
         print("appDirectories: \(appDirectories)") // Debug log
         var appGroups = [String: [(String, NSImage?, String)]]() // Store the full path
         var allApps = [(String, NSImage?, String)]() // Array to hold all apps
@@ -307,6 +379,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Add a separator line
         menu?.addItem(NSMenuItem.separator())
         
+        // All apps
         let allGroupMenu = NSMenu()
         for (appName, icon, fullPath) in allApps.sorted(by: { $0.0 < $1.0 }) {
             let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
@@ -333,13 +406,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let settingsMenuItem = NSMenuItem(title: "Settings", action: #selector(openSettings(_:)), keyEquivalent: "")
         settingsMenuItem.target = self
         menu?.addItem(settingsMenuItem)
+        
+        // Add "About" menu item
+        let aboutMenuItem = NSMenuItem(title: "About", action: #selector(showAbout(_:)), keyEquivalent: "")
+        aboutMenuItem.target = self
+        menu?.addItem(aboutMenuItem)
 
         // Add "Quit" menu item
         let quitMenuItem = NSMenuItem(title: "Quit", action: #selector(quitApp(_:)), keyEquivalent: "q")
         quitMenuItem.target = self
         menu?.addItem(quitMenuItem)
-
-        // Add more menu items here as needed
     }
 
     // Refresh menu action
@@ -347,7 +423,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu?.removeAllItems()
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
-            // Perform necessary file operations here
             populateMenu()
 
             // When finished:
@@ -433,7 +508,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func openApp(_ sender: NSMenuItem) {
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
-            // Perform necessary file operations here
             if let appPath = sender.representedObject as? String {
                 NSWorkspace.shared.open(URL(fileURLWithPath: appPath))
             }
