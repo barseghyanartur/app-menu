@@ -95,7 +95,7 @@ struct AppearanceSettingsView: View {
                 Text("Text & Icon").tag(2)
             }.pickerStyle(RadioGroupPickerStyle())
         }
-        .frame(width: 400, height: 100)
+        .frame(width: 500, height: 100)
     }
 }
 
@@ -133,6 +133,21 @@ struct DirectoryAccessView: View {
     }
 }
 
+
+struct AppsMenuSettingsView: View {
+    @AppStorage("caseInsensitiveAppsSorting") private var caseInsensitiveAppsSorting: Bool = false
+    @AppStorage("listAppsFromSubDirsRecursively") private var listAppsFromSubDirsRecursively: Bool = false
+
+    var body: some View {
+        Form {
+            Toggle("Case insensitive apps sorting", isOn: $caseInsensitiveAppsSorting)
+//            Toggle("List apps from sub-directories recursively", isOn: $listAppsFromSubDirsRecursively)
+        }
+        .padding()
+        .frame(width: 500, height: 100)
+    }
+}
+
 struct ChromeAppsSettingsView: View {
     @AppStorage("showChromeApps") private var showChromeApps: Bool = false
 
@@ -141,7 +156,7 @@ struct ChromeAppsSettingsView: View {
             Toggle("Show Chrome Apps", isOn: $showChromeApps)
         }
         .padding()
-        .frame(width: 300, height: 100)
+        .frame(width: 500, height: 100)
     }
 }
 
@@ -155,6 +170,10 @@ struct SettingsView: View {
                 AppearanceSettingsView(selectedOption: $selectedOption)
                     .tabItem {
                         Text("Appearance")
+                    }
+                AppsMenuSettingsView()
+                    .tabItem {
+                        Label("Applications Menu", systemImage: "folder")
                     }
                 DirectoryAccessView()
                     .tabItem {
@@ -356,6 +375,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var appGroups = [String: [(String, NSImage?, String)]]() // Store the full path
         var allApps = [(String, NSImage?, String)]() // Array to hold all apps
         var chromeApps = [(String, NSImage?, String)]() // Array to hold chrome apps
+        
+        let caseInsensitiveSorting = UserDefaults.standard.bool(forKey: "caseInsensitiveAppsSorting")
+//        let listSubDirsRecursively = UserDefaults.standard.bool(forKey: "listAppsFromSubDirsRecursively")
 
         for appDir in appDirectories {
             do {
@@ -393,7 +415,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Now proceed to populate the menu with grouped apps
         for (category, apps) in appGroups.sorted(by: { $0.key < $1.key }) {
             let groupMenu = NSMenu()
-            for (appName, icon, fullPath) in apps.sorted(by: { $0.0 < $1.0 }) {
+            
+            // Sorting apps
+            let sortedApps = apps.sorted(by: {
+                if caseInsensitiveSorting {
+                    return $0.0.localizedCaseInsensitiveCompare($1.0) == .orderedAscending
+                } else {
+                    return $0.0 < $1.0
+                }
+            })
+            
+            // Render menu items
+            for (appName, icon, fullPath) in sortedApps {
                 let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
                 menuItem.target = self
                 if let iconImage = icon {
@@ -414,7 +447,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menu?.addItem(NSMenuItem.separator())
 
             let chromeGroupMenu = NSMenu()
-            for (appName, icon, fullPath) in chromeApps.sorted(by: { $0.0 < $1.0 }) {
+
+            // Sorting apps
+            let sortedChromeApps = chromeApps.sorted(by: {
+                if caseInsensitiveSorting {
+                    return $0.0.localizedCaseInsensitiveCompare($1.0) == .orderedAscending
+                } else {
+                    return $0.0 < $1.0
+                }
+            })
+            
+            // Render menu items
+            for (appName, icon, fullPath) in sortedChromeApps {
                 let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
                 menuItem.target = self
                 if let iconImage = icon {
@@ -433,7 +477,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // All apps
         let allGroupMenu = NSMenu()
-        for (appName, icon, fullPath) in allApps.sorted(by: { $0.0 < $1.0 }) {
+
+        // Sorting apps
+        let sortedAllApps = allApps.sorted(by: {
+            if caseInsensitiveSorting {
+                return $0.0.localizedCaseInsensitiveCompare($1.0) == .orderedAscending
+            } else {
+                return $0.0 < $1.0
+            }
+        })
+        
+        // Render menu items
+        for (appName, icon, fullPath) in sortedAllApps {
             let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
             menuItem.target = self
             if let iconImage = icon {

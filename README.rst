@@ -9,7 +9,7 @@ app-menu
 
 .. _tabler icons: https://github.com/tabler/tabler-icons
 
-The missing Application Menu for macOs.
+The missing Applications Menu for macOs.
 
 .. image:: Docs/app_menu_screenshot.jpg
   :width: 400

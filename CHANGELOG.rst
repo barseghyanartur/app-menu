@@ -16,6 +16,16 @@ are used for versioning (schema follows below):
   0.3.4 to 0.4).
 - All backwards incompatible changes are mentioned in this document.
 
+0.1.2
+-----
+2024-02-14
+
+.. note::
+
+   Release dedicated to my dear valentine - Anahit.
+
+- Added option for case insensitive application sorting.
+
 0.1.1
 -----
 2024-02-03
