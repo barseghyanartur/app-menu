@@ -9,7 +9,7 @@ app-menu
 
 .. _tabler icons: https://github.com/tabler/tabler-icons
 
-The missing Applications Menu for macOs.
+The missing Applications Menu for macOS.
 
 .. image:: Docs/app_menu_screenshot.jpg
   :width: 400
@@ -17,6 +17,17 @@ The missing Applications Menu for macOs.
 
 Installation
 ============
+Install using ``brew``
+----------------------
+*Recommended*
+
+.. code-block:: sh
+
+    brew tap barseghyanartur/app-menu-tap
+    brew install --cask app-menu
+
+Install manually
+----------------
 Go to `Releases`_ and download the latest ``ApplicationMenu.zip`` file, 
 unpack it, open the extracted ``ApplicationMenu.dmg`` and simply drag the 
 ``ApplicationMenu`` into the ``Applications`` directory.
