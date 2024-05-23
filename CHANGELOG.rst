@@ -16,6 +16,14 @@ are used for versioning (schema follows below):
   0.3.4 to 0.4).
 - All backwards incompatible changes are mentioned in this document.
 
+0.1.3
+-----
+2024-05-23
+
+- Correct version in the meta-data.
+- Add a Version tab to About section.
+- Add info about tap-install.
+
 0.1.2
 -----
 2024-02-14
