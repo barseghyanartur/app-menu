@@ -221,6 +221,11 @@ struct AboutView: View {
                     Text("Credits")
                 }
             
+            VersionView()
+                .tabItem {
+                    Text("Version")
+                }
+            
         }
         .frame(width: 400, height: 300)
         .padding()
@@ -267,6 +272,24 @@ struct LicenseView: View {
             """)
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+}
+
+struct VersionView: View {
+    func getAppVersion() -> String {
+        if let version = Bundle.main.infoDictionary?["AppVersion"] as? String {
+            return version
+        }
+        return "Version not found"
+    }
+
+    var body: some View {
+        ScrollView {
+            Text("""
+            Version: \(getAppVersion())
+            """)
+            .padding()
         }
     }
 }
