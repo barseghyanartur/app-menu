@@ -388,7 +388,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
 //        let userApplicationsDir = homeDirectory + "/Applications"
         let userAppsDir = URL.userHome.path + "/Applications"
-        let chromeAppsDir = userAppsDir + "/Chrome Apps.localized"
+//        let chromeAppsDir = userAppsDir + "/Chrome Apps.localized"
+        let chromeAppsDirs = [
+            userAppsDir + "/Chrome Apps.localized/",
+            userAppsDir + "/Brave Browser Apps.localized/",
+            userAppsDir + "/Edge Apps.localized/",
+            userAppsDir + "/Opera Apps.localized/",
+            userAppsDir + "/Vivaldi Apps.localized/"
+        ]
 
         let appDirectories = ["/Applications", "/System/Applications", userAppsDir]
         
@@ -419,19 +426,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        do {
-            let appContents = try fileManager.contentsOfDirectory(atPath: chromeAppsDir)
-            for appName in appContents where appName.hasSuffix(".app") {
-                let appPath = chromeAppsDir + "/" + appName
-                print("Checking app at path: \(appPath)") // Debug log
-                let (category, appName, icon) = fetchAppDetails(atPath: appPath)
-                let humanReadableCategory = makeHumanReadable(category)
-                chromeApps.append((appName, icon, appPath)) // Store full path here
+        for chromeAppsDir in chromeAppsDirs {
+            do {
+                let appContents = try fileManager.contentsOfDirectory(atPath: chromeAppsDir)
+                for appName in appContents where appName.hasSuffix(".app") {
+                    let appPath = chromeAppsDir + "/" + appName
+                    print("Checking app at path: \(appPath)") // Debug log
+                    let (category, appName, icon) = fetchAppDetails(atPath: appPath)
+                    let humanReadableCategory = makeHumanReadable(category)
+                    chromeApps.append((appName, icon, appPath)) // Store full path here
+                }
+            } catch {
+                print("Error reading applications directory (\(chromeAppsDir)): \(error)")
             }
-        } catch {
-            print("Error reading applications directory (\(chromeAppsDir)): \(error)")
         }
-        
+
         // Add 'All' category
 //        appGroups["All"] = allApps
 
