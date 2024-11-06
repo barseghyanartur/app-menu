@@ -15,6 +15,11 @@ The missing Applications Menu for macOS.
   :width: 400
   :alt: AppMenu screenshot
 
+Compatibility
+=============
+- macOS Sanoma (14.x)
+- macOS Ventura (13.x)
+
 Installation
 ============
 Install using ``brew``
