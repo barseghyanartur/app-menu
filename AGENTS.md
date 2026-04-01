@@ -25,7 +25,7 @@ Key constraints that must never be violated:
 
 ## 2. Repository layout
 
-```
+```text
 ApplicationMenu/
     ApplicationMenuApp.swift        # @main entry point, AppDelegate, all views,
                                     # DirectoryAccess, URL.userHome extension
@@ -76,7 +76,7 @@ networking.
 
 ### 3.2 Menu population flow
 
-```
+```text
 applicationDidFinishLaunching
   └─ DirectoryAccess.restoreAccess()   # re-hydrate security-scoped bookmark
   └─ populateMenu()

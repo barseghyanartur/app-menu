@@ -11,6 +11,7 @@ UI tests in `ApplicationMenuUITests/` cover basic launch behaviour.
 ## Test Classes
 
 ### `MakeHumanReadableTests`
+
 Exercises `AppDelegate.makeHumanReadable(_:)`.
 
 | What is tested | Example |
@@ -21,6 +22,7 @@ Exercises `AppDelegate.makeHumanReadable(_:)`.
 | Edge cases: empty string, no dots, already capitalised, all-caps | — |
 
 ### `MakeHumanReadableFromFilenameTests`
+
 Exercises `AppDelegate.makeHumanReadableFromFilename(_:)`.
 
 | What is tested | Example |
@@ -31,6 +33,7 @@ Exercises `AppDelegate.makeHumanReadableFromFilename(_:)`.
 | Single word, empty string | — |
 
 ### `ResizeImageTests`
+
 Exercises `AppDelegate.resizeImage(image:w:h:isTemplate:)`.
 
 | What is tested |
@@ -41,6 +44,7 @@ Exercises `AppDelegate.resizeImage(image:w:h:isTemplate:)`.
 | Returns a new `NSImage` instance (not the same object) |
 
 ### `URLUserHomeTests`
+
 Exercises the `URL.userHome` / `URL.userHomePath` extension.
 
 | What is tested |
@@ -50,6 +54,7 @@ Exercises the `URL.userHome` / `URL.userHomePath` extension.
 | `URL.userHome.path` equals `URL.userHomePath` |
 
 ### `DirectoryAccessTests`
+
 Exercises `DirectoryAccess.restoreAccess()` and `DirectoryAccess.retractAccess()`.
 
 | What is tested |
@@ -60,6 +65,7 @@ Exercises `DirectoryAccess.restoreAccess()` and `DirectoryAccess.retractAccess()
 | Corrupt bookmark data → `restoreAccess()` returns `nil` (error path) |
 
 ### `AppSortingTests`
+
 Exercises the sorting comparator used in `AppDelegate.populateMenu()`.
 
 | What is tested |
@@ -71,6 +77,7 @@ Exercises the sorting comparator used in `AppDelegate.populateMenu()`.
 | Empty list, single element, duplicate names |
 
 ### `UserDefaultsSettingsTests`
+
 Verifies the keys and default values used throughout the app.
 
 | Key | Default |
@@ -80,6 +87,7 @@ Verifies the keys and default values used throughout the app.
 | `showChromeApps` | `false` |
 
 ### `MenuOptionChangedNotificationTests`
+
 Verifies the `"MenuOptionChanged"` `NotificationCenter` contract.
 
 | What is tested |
@@ -89,6 +97,7 @@ Verifies the `"MenuOptionChanged"` `NotificationCenter` contract.
 | `rawValue` equals the expected string |
 
 ### `FetchAppDetailsTests`
+
 Exercises `AppDelegate.fetchAppDetails(atPath:)` using temporary `.app` bundles
 constructed on disk.
 
@@ -102,6 +111,7 @@ constructed on disk.
 | Icon is never `nil` (falls back to workspace generic icon) |
 
 ### `VersionViewLogicTests`
+
 Replicates the `VersionView.getAppVersion()` helper.
 
 | What is tested |
@@ -110,6 +120,7 @@ Replicates the `VersionView.getAppVersion()` helper.
 | Result is either a semver string or the sentinel `"Version not found"` |
 
 ### `PerformanceTests`
+
 Baseline performance measurements (XCTest `measure` blocks).
 
 | What is measured |
@@ -122,11 +133,13 @@ Baseline performance measurements (XCTest `measure` blocks).
 ## Running the Tests
 
 ### In Xcode
+
 1. Open `ApplicationMenu.xcodeproj`.
 2. Select the `ApplicationMenuTests` scheme.
 3. Press **⌘U** (or **Product → Test**).
 
 ### From the command line
+
 ```bash
 xcodebuild test \
   -project ApplicationMenu.xcodeproj \
