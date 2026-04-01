@@ -25,7 +25,7 @@ Key constraints that must never be violated:
 
 ## 2. Repository layout
 
-```text
+```
 ApplicationMenu/
     ApplicationMenuApp.swift        # @main entry point, AppDelegate, all views,
                                     # DirectoryAccess, URL.userHome extension
@@ -62,7 +62,7 @@ networking.
 ### 3.1 Class / struct map
 
 | Symbol | Kind | Responsibility |
-| --- | --- | --- |
+|---|---|---|
 | `URL.userHome` / `URL.userHomePath` | Extension | Resolves `~` via `getpwuid` (sandbox-safe) |
 | `DirectoryAccess` | Class (static methods) | Security-scoped bookmark lifecycle |
 | `AppDelegate` | `NSObject, NSApplicationDelegate` | Status bar item, menu population, window management |
@@ -76,7 +76,7 @@ networking.
 
 ### 3.2 Menu population flow
 
-```text
+```
 applicationDidFinishLaunching
   └─ DirectoryAccess.restoreAccess()   # re-hydrate security-scoped bookmark
   └─ populateMenu()
@@ -95,7 +95,7 @@ applicationDidFinishLaunching
 ### 3.3 UserDefaults keys
 
 | Key | Type | Default | Used by |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | `menuBarOption` | `Int` | `0` | `AppDelegate.configureMenuBarItem()` — 0=Text, 1=Icon, 2=Text+Icon |
 | `caseInsensitiveAppsSorting` | `Bool` | `false` | Sort comparator in `populateMenu()` |
 | `showChromeApps` | `Bool` | `false` | Chrome-apps submenu block in `populateMenu()` |
@@ -126,7 +126,22 @@ menu rebuild.
 
 ---
 
-## 5. Build and test
+## 5. Build, test, and release
+
+All common operations are wrapped in `make` targets.  Run `make help` for a
+full list.  The raw `xcodebuild` commands are shown below for reference; prefer
+the `make` equivalents in practice.
+
+### Common make targets
+
+| Command | What it does |
+|---|---|
+| `make build` | Compile Debug build (smoke-check) |
+| `make test` | Run unit + UI tests |
+| `make test-unit` | Run unit tests only (faster) |
+| `make release` | Full release pipeline — see §5 "Release" below |
+| `make bump V=0.2.0` | Update `MARKETING_VERSION` in the project file |
+| `make clean` | Remove all generated artefacts under `Releases/` |
 
 ### Build (Xcode UI)
 
@@ -136,24 +151,41 @@ Open `ApplicationMenu.xcodeproj`, select the `ApplicationMenu` scheme, press
 ### Build (command line)
 
 ```sh
+make build
+# or directly:
 xcodebuild build \
   -project ApplicationMenu.xcodeproj \
   -scheme ApplicationMenu \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY="-"
 ```
 
 ### Run unit tests
 
 ```sh
-xcodebuild test \
-  -project ApplicationMenu.xcodeproj \
-  -scheme ApplicationMenu \
-  -destination 'platform=macOS'
+make test        # unit + UI
+make test-unit   # unit only
+# or in Xcode: ⌘U
 ```
 
-Or in Xcode: **⌘U**.
-
 See `TESTING.md` for a full description of each test class.
+
+### Release
+
+```sh
+make release
+```
+
+This runs the full pipeline in order:
+
+1. `make archive` — `xcodebuild archive` → `Releases/archive/ApplicationMenu.xcarchive`
+2. `make export`  — `xcodebuild -exportArchive` (Copy App method) → `Releases/export/ApplicationMenu.app`
+3. `make dmg`     — stages `.app` + `/Applications` symlink, calls `hdiutil` → `Releases/dist/ApplicationMenu.dmg`
+4. `make zip`     — `ditto -ck` → `Releases/dist/ApplicationMenu.zip`
+5. `make checksum`— `shasum -a 256` → printed to stdout and saved to `Releases/dist/ApplicationMenu.zip.sha256`
+
+At the end, the Makefile prints the SHA-256 and the three manual steps that
+remain (git tag, GitHub release upload, tap formula update).
 
 ### Deployment target
 
@@ -168,7 +200,7 @@ These are documented so that an agent does not "fix" them in a way that
 introduces new problems.
 
 | Issue | Location | Notes |
-| --- | --- | --- |
+|---|---|---|
 | `SettingsWindowController.swift` contains a duplicate `AppDelegate` | `SettingsWindowController.swift` | File is excluded from the compile target. The correct fix is to delete the file entirely after verifying nothing references it. |
 | `ContentView.swift` is unused | `ContentView.swift` | The app is menu-bar only; `ContentView` is never presented. It is safe to delete. |
 | `listAppsFromSubDirsRecursively` setting is wired up in `UserDefaults` but the corresponding scan logic is commented out | `ApplicationMenuApp.swift` | Implement recursive directory traversal or remove the key entirely. |
