@@ -143,7 +143,7 @@ export:
 	  '<plist version="1.0">' \
 	  '<dict>' \
 	  '    <key>method</key>' \
-	  '    <string>copy</string>' \
+	  '    <string>mac-application</string>' \
 	  '</dict>' \
 	  '</plist>' \
 	  > "$(EXPORT_OPTS)"
