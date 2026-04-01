@@ -76,8 +76,8 @@ endif
 # ---------------------------------------------------------------------------
 # Phony targets
 # ---------------------------------------------------------------------------
-.PHONY: all build test test-unit archive export dmg zip checksum release \
-        version bump open clean help
+.PHONY: all build test test-unit archive export dmg zip checksum tap release \
+         version bump open clean help
 
 all: help
 
@@ -197,8 +197,58 @@ checksum:
 	@shasum -a 256 "$(ZIP_PATH)" | tee "$(SHASUM_PATH)"
 	@echo "→ Checksum saved: $(SHASUM_PATH)"
 
-## release: Full pipeline — archive → export → dmg → zip → checksum
-release: archive export dmg zip checksum
+## tap: Generate Homebrew tap cask files → Releases/tap/
+tap: checksum
+	@mkdir -p "$(RELEASES_DIR)/tap"
+	@SHA256=$$(awk '{print $$1}' "$(SHASUM_PATH)") && \
+	( \
+	  echo 'cask "app-menu" do' ; \
+	  echo "  version \"$(VERSION)\"" ; \
+	  echo "  sha256 \"$$SHA256\"" ; \
+	  echo '' ; \
+	  echo "  url \"https://github.com/barseghyanartur/app-menu/releases/download/$(VERSION)/ApplicationMenu.zip\"" ; \
+	  echo '  name "App Menu"' ; \
+	  echo '  desc "The missing Applications Menu for macOS."' ; \
+	  echo '  homepage "https://github.com/barseghyanartur/app-menu"' ; \
+	  echo '' ; \
+	  echo '  container type: :naked' ; \
+	  echo '' ; \
+	  echo '  stage_only true' ; \
+	  echo '' ; \
+	  echo '  postflight do' ; \
+	  echo '    zip_path = "#{staged_path}/ApplicationMenu.zip"' ; \
+	  echo '    extract_dir = "#{staged_path}/extracted"' ; \
+	  echo '' ; \
+	  echo '    system_command "unzip", args: ["-d", extract_dir, zip_path]' ; \
+	  echo '' ; \
+	  echo '    dmg_path = "#{extract_dir}/ApplicationMenu.dmg"' ; \
+	  echo '' ; \
+	  echo '    if File.exist?(dmg_path)' ; \
+	  echo '      system_command "hdiutil",' ; \
+	  echo '                     args: ["attach", "-nobrowse", dmg_path]' ; \
+	  echo '' ; \
+	  echo '      if File.exist?("/Applications/ApplicationMenu.app")' ; \
+	  echo '        system_command "rm", args: ["-rf", "/Applications/ApplicationMenu.app"]' ; \
+	  echo '      end' ; \
+	  echo '' ; \
+	  echo '      system_command "cp", ' ; \
+	  echo '                     args: ["-r", "/Volumes/ApplicationMenu/ApplicationMenu.app", "/Applications/"]' ; \
+	  echo '' ; \
+	  echo '      system_command "hdiutil",' ; \
+	  echo '                     args: ["detach", "/Volumes/ApplicationMenu"]' ; \
+	  echo '    else' ; \
+	  echo '      raise "DMG file not found: #{dmg_path}"' ; \
+	  echo '    end' ; \
+	  echo '  end' ; \
+	  echo '' ; \
+	  echo '  uninstall delete: "/Applications/ApplicationMenu.app"' ; \
+	  echo 'end' \
+	) > "$(RELEASES_DIR)/tap/app-menu.rb" && \
+	sed "s/app-menu\" do/app-menu@$(VERSION)\" do/" "$(RELEASES_DIR)/tap/app-menu.rb" > "$(RELEASES_DIR)/tap/app-menu@$(VERSION).rb" && \
+	echo "→ Tap files: $(RELEASES_DIR)/tap/"
+
+## release: Full pipeline — archive → export → dmg → zip → checksum → tap
+release: archive export dmg zip checksum tap
 	@echo ""
 	@echo "╔══════════════════════════════════════════════════════╗"
 	@echo "║  Release artefacts ready — v$(VERSION)"
@@ -208,12 +258,14 @@ release: archive export dmg zip checksum
 	@echo "║  DMG      : $(DMG_PATH)"
 	@echo "║  ZIP      : $(ZIP_PATH)"
 	@echo "║  SHA-256  : $$(awk '{print $$1}' $(SHASUM_PATH))"
+	@echo "║  Tap      : $(RELEASES_DIR)/tap/app-menu.rb"
+	@echo "║            $(RELEASES_DIR)/tap/app-menu@$(VERSION).rb"
 	@echo "╠══════════════════════════════════════════════════════╣"
 	@echo "║  Next steps:"
 	@echo "║  1. git tag $(VERSION) && git push --tags"
 	@echo "║  2. Upload $(APP_NAME).zip to the GitHub release"
-	@echo "║  3. Update barseghyanartur/app-menu-tap with the"
-	@echo "║     new version and SHA-256 shown above"
+	@echo "║  3. Copy tap files to your Homebrew tap repo:"
+	@echo "║       cp Releases/tap/*.rb /path/to/your-tap/Casks/"
 	@echo "╚══════════════════════════════════════════════════════╝"
 
 # ---------------------------------------------------------------------------
