@@ -62,7 +62,7 @@ networking.
 ### 3.1 Class / struct map
 
 | Symbol | Kind | Responsibility |
-| ------ | ---- | -------------- |
+| --- | --- | --- |
 | `URL.userHome` / `URL.userHomePath` | Extension | Resolves `~` via `getpwuid` (sandbox-safe) |
 | `DirectoryAccess` | Class (static methods) | Security-scoped bookmark lifecycle |
 | `AppDelegate` | `NSObject, NSApplicationDelegate` | Status bar item, menu population, window management |
@@ -95,7 +95,7 @@ applicationDidFinishLaunching
 ### 3.3 UserDefaults keys
 
 | Key | Type | Default | Used by |
-| --- | ---- | ------- | ------- |
+| --- | --- | --- | --- |
 | `menuBarOption` | `Int` | `0` | `AppDelegate.configureMenuBarItem()` — 0=Text, 1=Icon, 2=Text+Icon |
 | `caseInsensitiveAppsSorting` | `Bool` | `false` | Sort comparator in `populateMenu()` |
 | `showChromeApps` | `Bool` | `false` | Chrome-apps submenu block in `populateMenu()` |
@@ -168,7 +168,7 @@ These are documented so that an agent does not "fix" them in a way that
 introduces new problems.
 
 | Issue | Location | Notes |
-| ----- | -------- | ----- |
+| --- | --- | --- |
 | `SettingsWindowController.swift` contains a duplicate `AppDelegate` | `SettingsWindowController.swift` | File is excluded from the compile target. The correct fix is to delete the file entirely after verifying nothing references it. |
 | `ContentView.swift` is unused | `ContentView.swift` | The app is menu-bar only; `ContentView` is never presented. It is safe to delete. |
 | `listAppsFromSubDirsRecursively` setting is wired up in `UserDefaults` but the corresponding scan logic is commented out | `ApplicationMenuApp.swift` | Implement recursive directory traversal or remove the key entirely. |
