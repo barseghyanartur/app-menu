@@ -16,6 +16,17 @@ are used for versioning (schema follows below):
   0.3.4 to 0.4).
 - All backwards incompatible changes are mentioned in this document.
 
+0.1.6
+-----
+2026-04-01
+
+.. note::
+
+    Release is dedicated to my beloved son Raffi, who turned 21 recently.
+
+- Tested on macOS Tahoe.
+- Improve tests and significantly simplify release process.
+
 0.1.5
 -----
 2024-11-06
