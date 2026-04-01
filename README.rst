@@ -9,8 +9,6 @@ app-menu
 
 .. _tabler icons: https://github.com/tabler/tabler-icons
 
-The missing Applications Menu for macOS.
-
 .. image:: https://github.com/barseghyanartur/app-menu/actions/workflows/test.yml/badge.svg?branch=main
    :target: https://github.com/barseghyanartur/app-menu/actions
    :alt: Build Status
@@ -18,6 +16,8 @@ The missing Applications Menu for macOS.
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
    :target: https://github.com/barseghyanartur/app-menu/#Licence
    :alt: MIT
+
+The missing Applications Menu for macOS.
 
 .. image:: Docs/app_menu_screenshot.jpg
   :width: 400
