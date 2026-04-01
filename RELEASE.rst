@@ -8,7 +8,7 @@ Archive the application
 #. Xcode -> Product -> Archive : Distribute App -> Custom -> Copy App : Export
 #. Create another directory `ApplicationMenuInstaller` in the directory where your `ApplicationMenu.app` was created.
 #. Move the `ApplicationMenu.app` into that directory.
-#. Create an alias from `/Applications` directory: Finder -> Macintosch HD -> `Ctrl + Click` on the `Applications` -> Make Alias.
+#. Create an alias from `/Applications` directory: Finder -> Macintosh HD -> `Ctrl + Click` on the `Applications` -> Make Alias.
 #. Move the created alias from `/Users/me/Desktop` into `ApplicationMenuInstaller`.
 #. Create a dmg archive:
 

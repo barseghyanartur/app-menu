@@ -85,6 +85,7 @@ Verifies the keys and default values used throughout the app.
 | `menuBarOption` | `0` (Text) |
 | `caseInsensitiveAppsSorting` | `false` |
 | `showChromeApps` | `false` |
+| `listAppsFromSubDirsRecursively` | `false` |
 
 ### `MenuOptionChangedNotificationTests`
 
