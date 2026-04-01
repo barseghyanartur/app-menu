@@ -322,26 +322,26 @@ final class AppSortingTests: XCTestCase {
     }
 
     func testCaseSensitiveSortingPutsUppercaseFirst() {
-        let apps = [("mail", nil, ""), ("Xcode", nil, ""), ("safari", nil, "")]
+        let apps: [(String, NSImage?, String)] = [("mail", nil, ""), ("Xcode", nil, ""), ("safari", nil, "")]
         let sorted = sortedApps(apps, caseInsensitive: false)
         // ASCII: uppercase < lowercase → "Xcode" before "mail" and "safari"
         XCTAssertEqual(sorted.map { $0.0 }, ["Xcode", "mail", "safari"])
     }
 
     func testCaseInsensitiveSortingIgnoresCase() {
-        let apps = [("mail", nil, ""), ("Xcode", nil, ""), ("Safari", nil, "")]
+        let apps: [(String, NSImage?, String)] = [("mail", nil, ""), ("Xcode", nil, ""), ("Safari", nil, "")]
         let sorted = sortedApps(apps, caseInsensitive: true)
         XCTAssertEqual(sorted.map { $0.0 }, ["mail", "Safari", "Xcode"])
     }
 
     func testAlreadySortedListIsUnchanged() {
-        let apps = [("App A", nil, ""), ("App B", nil, ""), ("App C", nil, "")]
+        let apps: [(String, NSImage?, String)] = [("App A", nil, ""), ("App B", nil, ""), ("App C", nil, "")]
         let sorted = sortedApps(apps, caseInsensitive: false)
         XCTAssertEqual(sorted.map { $0.0 }, ["App A", "App B", "App C"])
     }
 
     func testReverseOrderedListIsSorted() {
-        let apps = [("Zoom", nil, ""), ("Mail", nil, ""), ("Finder", nil, "")]
+        let apps: [(String, NSImage?, String)] = [("Zoom", nil, ""), ("Mail", nil, ""), ("Finder", nil, "")]
         let sorted = sortedApps(apps, caseInsensitive: true)
         XCTAssertEqual(sorted.map { $0.0 }, ["Finder", "Mail", "Zoom"])
     }
@@ -353,14 +353,14 @@ final class AppSortingTests: XCTestCase {
     }
 
     func testSingleElementReturnsSelf() {
-        let apps = [("OnlyApp", nil, "/Applications/OnlyApp.app")]
+        let apps: [(String, NSImage?, String)] = [("OnlyApp", nil, "/Applications/OnlyApp.app")]
         let sorted = sortedApps(apps, caseInsensitive: false)
         XCTAssertEqual(sorted.count, 1)
         XCTAssertEqual(sorted[0].0, "OnlyApp")
     }
 
     func testDuplicateNamesPreservedBothEntries() {
-        let apps = [("TextEdit", nil, "/p1"), ("TextEdit", nil, "/p2")]
+        let apps: [(String, NSImage?, String)] = [("TextEdit", nil, "/p1"), ("TextEdit", nil, "/p2")]
         let sorted = sortedApps(apps, caseInsensitive: false)
         XCTAssertEqual(sorted.count, 2)
     }
