@@ -11,6 +11,14 @@ app-menu
 
 The missing Applications Menu for macOS.
 
+.. image:: https://github.com/barseghyanartur/app-menu/actions/workflows/test.yml/badge.svg?branch=main
+   :target: https://github.com/barseghyanartur/app-menu/actions
+   :alt: Build Status
+
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+   :target: https://github.com/barseghyanartur/app-menu/#Licence
+   :alt: MIT
+
 .. image:: Docs/app_menu_screenshot.jpg
   :width: 400
   :alt: AppMenu screenshot
