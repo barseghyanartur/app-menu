@@ -192,6 +192,21 @@ remain (git tag, GitHub release upload, tap formula update).
 `MACOSX_DEPLOYMENT_TARGET = 13.1` (macOS Ventura).  Any new API call that
 requires 14+ must be wrapped in `if #available(macOS 14, *) { ... }`.
 
+### GitHub CI
+
+Tests run automatically on every push and pull request via `.github/workflows/test.yml`.
+
+| Runner | Status |
+|--------|--------|
+| macOS 26 (Tahoe) | Tested |
+| macOS 15 (Sequoia) | Tested |
+| macOS 14 (Sonoma) | Tested |
+| macOS 13 (Ventura) | Not tested — runner deprecated on GitHub |
+
+macOS 13 (Ventura) remains fully supported and works correctly; it is not tested
+on CI because GitHub no longer provides macOS 13 runners. The app's deployment
+target is 13.1, ensuring compatibility.
+
 ---
 
 ## 6. Known issues / tech debt
