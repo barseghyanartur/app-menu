@@ -319,6 +319,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var menu: NSMenu?
     var settingsWindow: NSWindow?
     var aboutWindow: NSWindow?
+    var favouritesWindow: NSWindow?
 
     @objc func openSettings(_ sender: NSMenuItem) {
         if settingsWindow == nil {
@@ -376,20 +377,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func openFavouritesManagementWindow(_ notification: Notification) {
-        let allApps: [(String, NSImage?, String, String?)]
-        if let url = DirectoryAccess.restoreAccess() {
-            allApps = getAllScannedApps()
-            url.stopAccessingSecurityScopedResource()
+        if favouritesWindow == nil {
+            let allApps: [(String, NSImage?, String, String?)]
+            if let url = DirectoryAccess.restoreAccess() {
+                allApps = getAllScannedApps()
+                url.stopAccessingSecurityScopedResource()
+            } else {
+                allApps = getAllScannedApps()
+            }
+            let view = FavouritesManagementView(allApps: allApps)
+            let hostingController = NSHostingController(rootView: view)
+            favouritesWindow = NSWindow(contentViewController: hostingController)
+            favouritesWindow?.title = "Manage Favourites"
+            favouritesWindow?.setContentSize(NSSize(width: 650, height: 450))
         } else {
-            allApps = getAllScannedApps()
+            let allApps: [(String, NSImage?, String, String?)]
+            if let url = DirectoryAccess.restoreAccess() {
+                allApps = getAllScannedApps()
+                url.stopAccessingSecurityScopedResource()
+            } else {
+                allApps = getAllScannedApps()
+            }
+            let view = FavouritesManagementView(allApps: allApps)
+            favouritesWindow?.contentViewController = NSHostingController(rootView: view)
         }
-        let view = FavouritesManagementView(allApps: allApps)
-        let hostingController = NSHostingController(rootView: view)
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "Manage Favourites"
-        window.setContentSize(NSSize(width: 650, height: 450))
+
         NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        favouritesWindow?.makeKeyAndOrderFront(nil)
     }
 
     private func getAllScannedApps() -> [(String, NSImage?, String, String?)] {
