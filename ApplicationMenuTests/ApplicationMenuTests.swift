@@ -502,13 +502,13 @@ final class FetchAppDetailsTests: XCTestCase {
 
     func testFallsBackToCategoryOtherWhenPlistMissing() throws {
         let appPath = try makeAppBundle(name: "NoInfo.app", plist: nil)
-        let (category, _, _) = delegate.fetchAppDetails(atPath: appPath)
+        let (category, _, _, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertEqual(category, "Other")
     }
 
     func testFallsBackToFilenameWhenCFBundleNameMissing() throws {
         let appPath = try makeAppBundle(name: "My-Cool-App.app", plist: [:])
-        let (_, appName, _) = delegate.fetchAppDetails(atPath: appPath)
+        let (_, appName, _, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertFalse(appName.isEmpty)
     }
 
@@ -520,7 +520,7 @@ final class FetchAppDetailsTests: XCTestCase {
                 "LSApplicationCategoryType": "public.app-category.utilities"
             ]
         )
-        let (category, appName, _) = delegate.fetchAppDetails(atPath: appPath)
+        let (category, appName, _, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertEqual(appName, "My Great App")
         XCTAssertEqual(category, "public.app-category.utilities")
     }
@@ -530,7 +530,7 @@ final class FetchAppDetailsTests: XCTestCase {
             name: "Dummy2.app",
             plist: ["CFBundleDisplayName": "Display Name App"]
         )
-        let (_, appName, _) = delegate.fetchAppDetails(atPath: appPath)
+        let (_, appName, _, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertEqual(appName, "Display Name App")
     }
 
@@ -539,7 +539,7 @@ final class FetchAppDetailsTests: XCTestCase {
             name: "Dummy3.app",
             plist: ["CFBundleName": "Test", "LSApplicationCategoryType": ""]
         )
-        let (category, _, _) = delegate.fetchAppDetails(atPath: appPath)
+        let (category, _, _, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertEqual(category, "Other")
     }
 
@@ -549,14 +549,14 @@ final class FetchAppDetailsTests: XCTestCase {
             name: "IconTest.app",
             plist: ["CFBundleName": "IconTest"]
         )
-        let (_, _, icon) = delegate.fetchAppDetails(atPath: appPath)
+        let (_, _, icon, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertNotNil(icon)
     }
 
     func testUnknownAppFallbackName() throws {
         // An entirely missing plist should yield the filename-derived name, not "Unknown App"
         let appPath = try makeAppBundle(name: "FancyTool.app", plist: nil)
-        let (_, appName, _) = delegate.fetchAppDetails(atPath: appPath)
+        let (_, appName, _, _) = delegate.fetchAppDetails(atPath: appPath)
         XCTAssertFalse(appName.isEmpty)
         XCTAssertNotEqual(appName, "Unknown App")
     }
@@ -604,5 +604,149 @@ final class PerformanceTests: XCTestCase {
                 _ = delegate.resizeImage(image: img, w: 20, h: 20)
             }
         }
+    }
+}
+
+// MARK: - FavouritesManager Tests
+
+final class FavouritesManagerTests: XCTestCase {
+
+    private let testDefaults = UserDefaults(suiteName: "com.appmenu.tests.favourites")
+    private var manager: FavouritesManager!
+
+    override func setUp() {
+        super.setUp()
+        manager = FavouritesManager(defaults: testDefaults!)
+        testDefaults?.removeObject(forKey: "showFavourites")
+        testDefaults?.removeObject(forKey: "favouriteAppBundleIDs")
+    }
+
+    override func tearDown() {
+        testDefaults?.removeObject(forKey: "showFavourites")
+        testDefaults?.removeObject(forKey: "favouriteAppBundleIDs")
+        super.tearDown()
+    }
+
+    func testShowFavouritesDefaultsToFalse() {
+        XCTAssertFalse(manager.showFavourites)
+    }
+
+    func testShowFavouritesCanBeSet() {
+        manager.showFavourites = true
+        XCTAssertTrue(manager.showFavourites)
+    }
+
+    func testFavouriteAppBundleIDsDefaultsToEmpty() {
+        XCTAssertTrue(manager.favouriteAppBundleIDs.isEmpty)
+    }
+
+    func testAddFavourite() {
+        manager.addFavourite(bundleID: "com.example.app")
+        XCTAssertEqual(manager.favouriteAppBundleIDs, ["com.example.app"])
+    }
+
+    func testAddFavouriteNoDuplicates() {
+        manager.addFavourite(bundleID: "com.example.app")
+        manager.addFavourite(bundleID: "com.example.app")
+        XCTAssertEqual(manager.favouriteAppBundleIDs, ["com.example.app"])
+    }
+
+    func testAddMultipleFavourites() {
+        manager.addFavourite(bundleID: "com.example.app1")
+        manager.addFavourite(bundleID: "com.example.app2")
+        XCTAssertEqual(manager.favouriteAppBundleIDs.count, 2)
+    }
+
+    func testRemoveFavourite() {
+        manager.addFavourite(bundleID: "com.example.app")
+        manager.removeFavourite(bundleID: "com.example.app")
+        XCTAssertTrue(manager.favouriteAppBundleIDs.isEmpty)
+    }
+
+    func testRemoveNonExistentFavouriteIsIdempotent() {
+        manager.removeFavourite(bundleID: "com.example.app")
+        XCTAssertTrue(manager.favouriteAppBundleIDs.isEmpty)
+    }
+
+    func testIsFavouriteReturnsTrue() {
+        manager.addFavourite(bundleID: "com.example.app")
+        XCTAssertTrue(manager.isFavourite(bundleID: "com.example.app"))
+    }
+
+    func testIsFavouriteReturnsFalse() {
+        XCTAssertFalse(manager.isFavourite(bundleID: "com.example.app"))
+    }
+
+    func testIsFavouriteReturnsFalseForEmptyID() {
+        XCTAssertFalse(manager.isFavourite(bundleID: ""))
+    }
+
+    func testToggleFavouriteAdds() {
+        manager.toggleFavourite(bundleID: "com.example.app")
+        XCTAssertTrue(manager.isFavourite(bundleID: "com.example.app"))
+    }
+
+    func testToggleFavouriteRemoves() {
+        manager.addFavourite(bundleID: "com.example.app")
+        manager.toggleFavourite(bundleID: "com.example.app")
+        XCTAssertFalse(manager.isFavourite(bundleID: "com.example.app"))
+    }
+
+    func testGetValidFavouritesFiltersNonFavourites() {
+        let apps: [(String, NSImage?, String, String?)] = [
+            ("App1", nil, "/App1.app", "com.example.app1"),
+            ("App2", nil, "/App2.app", "com.example.app2"),
+            ("App3", nil, "/App3.app", "com.example.app3")
+        ]
+        manager.showFavourites = true
+        manager.addFavourite(bundleID: "com.example.app1")
+        let valid = manager.getValidFavourites(from: apps)
+        XCTAssertEqual(valid.count, 1)
+        XCTAssertEqual(valid[0].0, "App1")
+    }
+
+    func testGetValidFavouritesReturnsEmptyWhenDisabled() {
+        manager.showFavourites = false
+        manager.addFavourite(bundleID: "com.example.app")
+        let apps: [(String, NSImage?, String, String?)] = [
+            ("App1", nil, "/App1.app", "com.example.app1")
+        ]
+        let valid = manager.getValidFavourites(from: apps)
+        XCTAssertTrue(valid.isEmpty)
+    }
+
+    func testGetNonFavouriteApps() {
+        let apps: [(String, NSImage?, String, String?)] = [
+            ("App1", nil, "/App1.app", "com.example.app1"),
+            ("App2", nil, "/App2.app", "com.example.app2"),
+            ("App3", nil, "/App3.app", "com.example.app3")
+        ]
+        manager.addFavourite(bundleID: "com.example.app1")
+        let nonFavs = manager.getNonFavouriteApps(from: apps)
+        XCTAssertEqual(nonFavs.count, 2)
+    }
+
+    func testClearAllFavourites() {
+        manager.addFavourite(bundleID: "com.example.app1")
+        manager.addFavourite(bundleID: "com.example.app2")
+        manager.clearAllFavourites()
+        XCTAssertTrue(manager.favouriteAppBundleIDs.isEmpty)
+    }
+
+    func testGetValidFavouritesHandlesNilBundleIDInApp() {
+        let apps: [(String, NSImage?, String, String?)] = [
+            ("App1", nil, "/App1.app", nil)
+        ]
+        manager.showFavourites = true
+        manager.addFavourite(bundleID: "com.example.app1")
+        let valid = manager.getValidFavourites(from: apps)
+        XCTAssertTrue(valid.isEmpty)
+    }
+
+    func testEmptyFavouritesListWithShowEnabledDoesNotCrash() {
+        manager.showFavourites = true
+        let apps: [(String, NSImage?, String, String?)] = []
+        let valid = manager.getValidFavourites(from: apps)
+        XCTAssertTrue(valid.isEmpty)
     }
 }
