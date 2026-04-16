@@ -10,6 +10,10 @@ struct FavouritesManagementView: View {
         _allApps = State(initialValue: allApps)
     }
 
+    // TODO: Apps with nil/empty bundleID are intentionally excluded here because bundleID is the
+    // persistence key (see FavouritesManager.addFavourite). Future work could surface these
+    // apps in the UI as disabled rows with a tooltip, or filter them with a visible message.
+    // See: favouritesManager.getNonFavouriteAppIDs which silently drops nil bundleIDs.
     private var filteredNonFavourites: [AppItem] {
         let nonFavs = favouritesManager.getNonFavouriteAppIDs(from: allApps)
         let sorted: [AppItem]
