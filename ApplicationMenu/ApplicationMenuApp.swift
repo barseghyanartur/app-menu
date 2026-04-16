@@ -375,7 +375,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func openFavouritesManagementWindow(_ notification: Notification) {
-        let allApps = getAllScannedApps()
+        let allApps: [(String, NSImage?, String, String?)]
+        if let url = DirectoryAccess.restoreAccess() {
+            allApps = getAllScannedApps()
+            url.stopAccessingSecurityScopedResource()
+        } else {
+            allApps = getAllScannedApps()
+        }
         let view = FavouritesManagementView(allApps: allApps)
         let hostingController = NSHostingController(rootView: view)
         let window = NSWindow(contentViewController: hostingController)
@@ -401,6 +407,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         for appDir in appDirectories {
             do {
+                guard fileManager.fileExists(atPath: appDir) else { continue }
                 let appContents = try fileManager.contentsOfDirectory(atPath: appDir)
                 for appName in appContents where appName.hasSuffix(".app") {
                     let appPath = appDir + "/" + appName
@@ -414,6 +421,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         for chromeAppsDir in chromeAppsDirs {
             do {
+                guard fileManager.fileExists(atPath: chromeAppsDir) else { continue }
                 let appContents = try fileManager.contentsOfDirectory(atPath: chromeAppsDir)
                 for appName in appContents where appName.hasSuffix(".app") {
                     let appPath = chromeAppsDir + "/" + appName

@@ -1,6 +1,13 @@
 import Foundation
 import AppKit
 
+struct AppItem: Identifiable {
+    let id = UUID()
+    let name: String
+    let icon: NSImage?
+    let bundleID: String
+}
+
 final class FavouritesManager {
     static let shared = FavouritesManager()
 
@@ -82,5 +89,23 @@ final class FavouritesManager {
 
     func clearAllFavourites() {
         favouriteAppBundleIDs = []
+    }
+
+    func getValidFavouriteAppIDs(from apps: [(String, NSImage?, String, String?)]) -> [AppItem] {
+        guard showFavourites else { return [] }
+        let favouriteIDs = Set(favouriteAppBundleIDs)
+        return apps.compactMap { app in
+            guard let bundleID = app.3, !bundleID.isEmpty, favouriteIDs.contains(bundleID) else { return nil }
+            return AppItem(name: app.0, icon: app.1, bundleID: bundleID)
+        }
+    }
+
+    func getNonFavouriteAppIDs(from apps: [(String, NSImage?, String, String?)]) -> [AppItem] {
+        let favouriteIDs = Set(favouriteAppBundleIDs)
+        return apps.compactMap { app in
+            guard let bundleID = app.3, !bundleID.isEmpty else { return nil }
+            if favouriteIDs.contains(bundleID) { return nil }
+            return AppItem(name: app.0, icon: app.1, bundleID: bundleID)
+        }
     }
 }

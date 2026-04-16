@@ -4,132 +4,111 @@ import AppKit
 struct FavouritesManagementView: View {
     @State private var allApps: [(String, NSImage?, String, String?)]
     @State private var searchText: String = ""
-    @State private var selectedLeftApps: Set<Int> = []
-    @State private var selectedRightApps: Set<Int> = []
 
     private let favouritesManager = FavouritesManager.shared
 
-    init(allApps: [(String, NSImage?, String, String?)] = []) {
+init(allApps: [(String, NSImage?, String, String?)] = []) {
         _allApps = State(initialValue: allApps)
     }
 
-    private var filteredNonFavourites: [(String, NSImage?, String, String?)] {
-        let nonFavs = favouritesManager.getNonFavouriteApps(from: allApps)
+    private var filteredNonFavourites: [AppItem] {
+        let nonFavs = favouritesManager.getNonFavouriteAppIDs(from: allApps)
+        let sorted: [AppItem]
         if searchText.isEmpty {
-            return nonFavs.sorted { $0.0 < $1.0 }
+            sorted = nonFavs.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        } else {
+            sorted = nonFavs.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
-        return nonFavs.filter { $0.0.localizedCaseInsensitiveContains(searchText) }
-            .sorted { $0.0 < $1.0 }
+        return sorted
     }
 
-    private var favouritesList: [(String, NSImage?, String, String?)] {
-        let f = favouritesManager.getValidFavourites(from: allApps)
-        return f.sorted { $0.0 < $1.0 }
+    private var favouritesList: [AppItem] {
+        let f = favouritesManager.getValidFavouriteAppIDs(from: allApps)
+        return f.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     var body: some View {
-        HSplitView {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("All Programs")
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("All Programs (\(filteredNonFavourites.count))")
                     .font(.headline)
-                    .padding(.horizontal)
                     .padding(.top, 8)
 
-                List(filteredNonFavourites.indices, id: \.self, selection: $selectedLeftApps) { index in
-                    let app = filteredNonFavourites[index]
-                    HStack {
-                        if let icon = app.1 {
-                            Image(nsImage: icon)
-                                .resizable()
-                                .frame(width: 20, height: 20)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(filteredNonFavourites) { app in
+                            AppRowView(name: app.name, icon: app.icon) {
+                                favouritesManager.addFavourite(bundleID: app.bundleID)
+                            }
                         }
-                        Text(app.0)
-                            .lineLimit(1)
                     }
-                    .tag(index)
+                    .padding(4)
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
-                .frame(minWidth: 250)
+                .background(Color(nsColor: .textBackgroundColor))
+                .cornerRadius(6)
 
-                TextField("Filter...", text: $searchText)
+                Text("Filter:")
+                TextField("Search...", text: $searchText)
                     .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
             }
-            .frame(minWidth: 250, idealWidth: 300)
+            .frame(width: 280)
+            .padding(8)
 
-            VStack(spacing: 8) {
-                HStack(spacing: 16) {
-                    Button(action: moveToFavourites) {
-                        Image(systemName: "arrow.right")
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(selectedLeftApps.isEmpty)
+            Divider()
 
-                    Button(action: removeFromFavourites) {
-                        Image(systemName: "arrow.left")
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(selectedRightApps.isEmpty)
-                }
-                .padding(.vertical, 8)
-            }
-            .frame(width: 50)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Favourites")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Favourites (\(favouritesList.count))")
                     .font(.headline)
-                    .padding(.horizontal)
                     .padding(.top, 8)
 
-                List(favouritesList.indices, id: \.self, selection: $selectedRightApps) { index in
-                    let app = favouritesList[index]
-                    HStack {
-                        if let icon = app.1 {
-                            Image(nsImage: icon)
-                                .resizable()
-                                .frame(width: 20, height: 20)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(favouritesList) { app in
+                            AppRowView(name: app.name, icon: app.icon) {
+                                favouritesManager.removeFavourite(bundleID: app.bundleID)
+                            }
                         }
-                        Text(app.0)
-                            .lineLimit(1)
                     }
-                    .tag(index)
+                    .padding(4)
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
-                .frame(minWidth: 250)
+                .background(Color(nsColor: .textBackgroundColor))
+                .cornerRadius(6)
 
                 if favouritesList.isEmpty {
                     Text("No favourites yet")
                         .foregroundColor(.secondary)
-                        .padding(.horizontal)
                 }
+            }
+            .frame(width: 280)
+            .padding(8)
+        }
+        .frame(width: 580, height: 420)
+    }
+}
 
+struct AppRowView: View {
+    let name: String
+    let icon: NSImage?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if let icon = icon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                }
+                Text(name)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 Spacer()
             }
-            .frame(minWidth: 250, idealWidth: 300)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
-        .frame(width: 650, height: 450)
-    }
-
-    private func moveToFavourites() {
-        let appsToMove = selectedLeftApps.compactMap { index -> String? in
-            guard index < filteredNonFavourites.count else { return nil }
-            return filteredNonFavourites[index].3
-        }.compactMap { $0 }
-        for bundleID in appsToMove where !bundleID.isEmpty {
-            favouritesManager.addFavourite(bundleID: bundleID)
-        }
-        selectedLeftApps.removeAll()
-    }
-
-    private func removeFromFavourites() {
-        let appsToRemove = selectedRightApps.compactMap { index -> String? in
-            guard index < favouritesList.count else { return nil }
-            return favouritesList[index].3
-        }.compactMap { $0 }
-        for bundleID in appsToRemove where !bundleID.isEmpty {
-            favouritesManager.removeFavourite(bundleID: bundleID)
-        }
-        selectedRightApps.removeAll()
+        .buttonStyle(.plain)
     }
 }
