@@ -101,6 +101,8 @@ applicationDidFinishLaunching
 | `showChromeApps` | `Bool` | `false` | Chrome-apps submenu block in `populateMenu()` |
 | `userSelectedDirectory` | `Data` | absent | Security-scoped bookmark for `~/Applications` |
 | `listAppsFromSubDirsRecursively` | `Bool` | `false` | **Not yet active** — toggled UI is commented out |
+| `showFavourites` | `Bool` | `false` | FavouritesManager.showFavourites / `@AppStorage` in ApplicationMenuApp |
+| `favouriteAppBundleIDs` | `[String]` | `[]` | FavouritesManager.favouriteAppBundleIDs |
 
 ### 3.4 Notification
 
