@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import Combine
 
 struct AppItem: Identifiable {
     let id = UUID()
@@ -8,7 +9,7 @@ struct AppItem: Identifiable {
     let bundleID: String
 }
 
-final class FavouritesManager {
+final class FavouritesManager: ObservableObject {
     static let shared = FavouritesManager()
 
     private let defaults: UserDefaults
@@ -20,6 +21,7 @@ final class FavouritesManager {
         get { defaults.bool(forKey: Self.showFavouritesKey) }
         set {
             defaults.set(newValue, forKey: Self.showFavouritesKey)
+            objectWillChange.send()
             NotificationCenter.default.post(name: NSNotification.Name("FavouritesChanged"), object: nil)
         }
     }
@@ -28,6 +30,7 @@ final class FavouritesManager {
         get { defaults.stringArray(forKey: Self.favouriteAppBundleIDsKey) ?? [] }
         set {
             defaults.set(newValue, forKey: Self.favouriteAppBundleIDsKey)
+            objectWillChange.send()
             NotificationCenter.default.post(name: NSNotification.Name("FavouritesChanged"), object: nil)
         }
     }

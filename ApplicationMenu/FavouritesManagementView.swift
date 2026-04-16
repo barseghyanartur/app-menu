@@ -4,10 +4,9 @@ import AppKit
 struct FavouritesManagementView: View {
     @State private var allApps: [(String, NSImage?, String, String?)]
     @State private var searchText: String = ""
+    @ObservedObject private var favouritesManager = FavouritesManager.shared
 
-    private let favouritesManager = FavouritesManager.shared
-
-init(allApps: [(String, NSImage?, String, String?)] = []) {
+    init(allApps: [(String, NSImage?, String, String?)] = []) {
         _allApps = State(initialValue: allApps)
     }
 
