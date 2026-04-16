@@ -222,8 +222,9 @@ struct SettingsView: View {
     func saveSettings() {
         // Save the settings using UserDefaults
         UserDefaults.standard.set(selectedOption, forKey: "menuBarOption")
-        // Post a notification to trigger an immediate update
+        // Post notifications to trigger immediate refresh
         NotificationCenter.default.post(name: NSNotification.Name("MenuOptionChanged"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("FavouritesChanged"), object: nil)
     }
 }
 
@@ -665,7 +666,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // Refresh menu action
-    @objc func refreshMenu(_ sender: NSMenuItem) {
+    @objc func refreshMenu(_ sender: Any?) {
         menu?.removeAllItems()
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
