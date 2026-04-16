@@ -524,8 +524,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Add 'All' category
 //        appGroups["All"] = allApps
 
-        // Favourites section
-        let favouriteApps = FavouritesManager.shared.getValidFavourites(from: allApps)
+        // Favourites section - include both regular apps and Chrome apps
+        let allAppsWithChrome = allApps + chromeApps
+        let favouriteApps = FavouritesManager.shared.getValidFavourites(from: allAppsWithChrome)
         if !favouriteApps.isEmpty {
             let favouritesGroupMenu = NSMenu()
             let sortedFavourites = favouriteApps.sorted(by: {
