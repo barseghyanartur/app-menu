@@ -20,8 +20,8 @@ final class FavouritesManager: ObservableObject {
     var showFavourites: Bool {
         get { defaults.bool(forKey: Self.showFavouritesKey) }
         set {
-            defaults.set(newValue, forKey: Self.showFavouritesKey)
             objectWillChange.send()
+            defaults.set(newValue, forKey: Self.showFavouritesKey)
             NotificationCenter.default.post(name: NSNotification.Name("FavouritesChanged"), object: nil)
         }
     }
@@ -29,8 +29,8 @@ final class FavouritesManager: ObservableObject {
     var favouriteAppBundleIDs: [String] {
         get { defaults.stringArray(forKey: Self.favouriteAppBundleIDsKey) ?? [] }
         set {
-            defaults.set(newValue, forKey: Self.favouriteAppBundleIDsKey)
             objectWillChange.send()
+            defaults.set(newValue, forKey: Self.favouriteAppBundleIDsKey)
             NotificationCenter.default.post(name: NSNotification.Name("FavouritesChanged"), object: nil)
         }
     }
