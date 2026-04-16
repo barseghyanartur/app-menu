@@ -85,7 +85,7 @@ final class FavouritesManager: ObservableObject {
     func getNonFavouriteApps(from apps: [(String, NSImage?, String, String?)]) -> [(String, NSImage?, String, String?)] {
         let favouriteIDs = Set(favouriteAppBundleIDs)
         return apps.filter { app in
-            guard let bundleID = app.3, !bundleID.isEmpty else { return true }
+            guard let bundleID = app.3, !bundleID.isEmpty else { return false }
             return !favouriteIDs.contains(bundleID)
         }
     }

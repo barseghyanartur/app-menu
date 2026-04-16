@@ -726,6 +726,19 @@ final class FavouritesManagerTests: XCTestCase {
         XCTAssertEqual(nonFavs.count, 2)
     }
 
+    func testGetNonFavouriteAppsDropsNilBundleID() {
+        let apps: [(String, NSImage?, String, String?)] = [
+            ("App1", nil, "/App1.app", "com.example.app1"),
+            ("App2", nil, "/App2.app", nil),
+            ("App3", nil, "/App3.app", ""),
+            ("App4", nil, "/App4.app", "com.example.app4")
+        ]
+        manager.addFavourite(bundleID: "com.example.app1")
+        let nonFavs = manager.getNonFavouriteApps(from: apps)
+        XCTAssertEqual(nonFavs.count, 1)
+        XCTAssertEqual(nonFavs[0].0, "App4")
+    }
+
     func testClearAllFavourites() {
         manager.addFavourite(bundleID: "com.example.app1")
         manager.addFavourite(bundleID: "com.example.app2")
