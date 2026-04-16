@@ -3,7 +3,7 @@ import AppKit
 import Combine
 
 struct AppItem: Identifiable {
-    let id = UUID()
+    var id: String { bundleID }
     let name: String
     let icon: NSImage?
     let bundleID: String
