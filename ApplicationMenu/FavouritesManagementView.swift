@@ -23,7 +23,7 @@ struct FavouritesManagementView: View {
     }
 
     private var favouritesList: [AppItem] {
-        let f = favouritesManager.getValidFavouriteAppIDs(from: allApps)
+        let f = favouritesManager.getAllFavouriteAppIDs(from: allApps)
         return f.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 

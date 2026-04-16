@@ -103,6 +103,14 @@ final class FavouritesManager: ObservableObject {
         }
     }
 
+    func getAllFavouriteAppIDs(from apps: [(String, NSImage?, String, String?)]) -> [AppItem] {
+        let favouriteIDs = Set(favouriteAppBundleIDs)
+        return apps.compactMap { app in
+            guard let bundleID = app.3, !bundleID.isEmpty, favouriteIDs.contains(bundleID) else { return nil }
+            return AppItem(name: app.0, icon: app.1, bundleID: bundleID)
+        }
+    }
+
     func getNonFavouriteAppIDs(from apps: [(String, NSImage?, String, String?)]) -> [AppItem] {
         let favouriteIDs = Set(favouriteAppBundleIDs)
         return apps.compactMap { app in
