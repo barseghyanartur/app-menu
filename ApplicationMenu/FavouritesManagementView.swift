@@ -86,7 +86,7 @@ struct FavouritesManagementView: View {
             .frame(width: 280)
             .padding(8)
         }
-        .frame(width: 580, height: 420)
+        .frame(width: 650, height: 450)
     }
 }
 
