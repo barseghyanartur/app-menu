@@ -14,6 +14,8 @@
 		8CDB70E72B67F8070067B3A4 /* ApplicationMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CDB70E62B67F8070067B3A4 /* ApplicationMenuTests.swift */; };
 		8CDB70F12B67F8070067B3A4 /* ApplicationMenuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CDB70F02B67F8070067B3A4 /* ApplicationMenuUITests.swift */; };
 		8CDB70F32B67F8070067B3A4 /* ApplicationMenuUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CDB70F22B67F8070067B3A4 /* ApplicationMenuUITestsLaunchTests.swift */; };
+		FAVB00012B67F8060067B3A4 /* FavouritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAV000022B67F8060067B3A4 /* FavouritesManager.swift */; };
+		FAVB00022B67F8060067B3A4 /* FavouritesManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAV000032B67F8060067B3A4 /* FavouritesManagementView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +40,8 @@
 		8CDB70D12B67F8060067B3A4 /* ApplicationMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ApplicationMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CDB70D42B67F8060067B3A4 /* ApplicationMenuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationMenuApp.swift; sourceTree = "<group>"; };
 		8CDB70D62B67F8060067B3A4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FAV000022B67F8060067B3A4 /* FavouritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavouritesManager.swift; sourceTree = "<group>"; };
+		FAV000032B67F8060067B3A4 /* FavouritesManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavouritesManagementView.swift; sourceTree = "<group>"; };
 		8CDB70D82B67F8070067B3A4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8CDB70DB2B67F8070067B3A4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		8CDB70DD2B67F8070067B3A4 /* ApplicationMenu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ApplicationMenu.entitlements; sourceTree = "<group>"; };
@@ -99,6 +103,8 @@
 				8C8AE0732B6BA9F900542E6C /* Info.plist */,
 				8CDB70D42B67F8060067B3A4 /* ApplicationMenuApp.swift */,
 				8CDB70D62B67F8060067B3A4 /* ContentView.swift */,
+				FAV000022B67F8060067B3A4 /* FavouritesManager.swift */,
+				FAV000032B67F8060067B3A4 /* FavouritesManagementView.swift */,
 				8CDB70D82B67F8070067B3A4 /* Assets.xcassets */,
 				8CDB70DD2B67F8070067B3A4 /* ApplicationMenu.entitlements */,
 				8CDB70DA2B67F8070067B3A4 /* Preview Content */,
@@ -264,6 +270,8 @@
 			files = (
 				8CDB70D72B67F8060067B3A4 /* ContentView.swift in Sources */,
 				8CDB70D52B67F8060067B3A4 /* ApplicationMenuApp.swift in Sources */,
+				FAVB00012B67F8060067B3A4 /* FavouritesManager.swift in Sources */,
+				FAVB00022B67F8060067B3A4 /* FavouritesManagementView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -444,7 +452,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.delusionalinsanity.ApplicationMenu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -479,7 +487,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.delusionalinsanity.ApplicationMenu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -499,7 +507,7 @@
 				DEVELOPMENT_TEAM = LQ3AR8MSBY;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.delusionalinsanity.ApplicationMenuTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -519,7 +527,7 @@
 				DEVELOPMENT_TEAM = LQ3AR8MSBY;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.delusionalinsanity.ApplicationMenuTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -537,7 +545,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LQ3AR8MSBY;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.delusionalinsanity.ApplicationMenuUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -555,7 +563,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LQ3AR8MSBY;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.delusionalinsanity.ApplicationMenuUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

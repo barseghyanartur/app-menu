@@ -160,6 +160,21 @@ struct ChromeAppsSettingsView: View {
     }
 }
 
+struct FavouritesSettingsView: View {
+    @AppStorage("showFavourites") private var showFavourites: Bool = false
+
+    var body: some View {
+        Form {
+            Toggle("Show Favourites in Menu", isOn: $showFavourites)
+            Button("Manage Favourites...") {
+                NotificationCenter.default.post(name: NSNotification.Name("OpenFavouritesManagement"), object: nil)
+            }
+        }
+        .padding()
+        .frame(width: 500, height: 100)
+    }
+}
+
 struct SettingsView: View {
     @State private var selectedOption: Int = UserDefaults.standard.integer(forKey: "menuBarOption")
     @Environment(\.presentationMode) var presentationMode
@@ -183,6 +198,10 @@ struct SettingsView: View {
                     .tabItem {
                         Label("Chrome Apps", systemImage: "folder")
                     }
+                FavouritesSettingsView()
+                    .tabItem {
+                        Label("Favourites", systemImage: "heart")
+                    }
             }
             .padding()
 
@@ -203,8 +222,9 @@ struct SettingsView: View {
     func saveSettings() {
         // Save the settings using UserDefaults
         UserDefaults.standard.set(selectedOption, forKey: "menuBarOption")
-        // Post a notification to trigger an immediate update
+        // Post notifications to trigger immediate refresh
         NotificationCenter.default.post(name: NSNotification.Name("MenuOptionChanged"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("FavouritesChanged"), object: nil)
     }
 }
 
@@ -299,6 +319,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var menu: NSMenu?
     var settingsWindow: NSWindow?
     var aboutWindow: NSWindow?
+    var favouritesWindow: NSWindow?
 
     @objc func openSettings(_ sender: NSMenuItem) {
         if settingsWindow == nil {
@@ -341,19 +362,93 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.menu = menu
 
         if let url = DirectoryAccess.restoreAccess() {
-            // Use the URL to access the directory
             populateMenu()
             configureMenuBarItem()
 
-            // When finished:
             url.stopAccessingSecurityScopedResource()
         } else {
             populateMenu()
             configureMenuBarItem()
         }
 
-        // Listen for changes
         NotificationCenter.default.addObserver(self, selector: #selector(configureMenuBarItem), name: NSNotification.Name("MenuOptionChanged"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(openFavouritesManagementWindow(_:)), name: NSNotification.Name("OpenFavouritesManagement"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshMenu(_:)), name: NSNotification.Name("FavouritesChanged"), object: nil)
+    }
+
+    @objc func openFavouritesManagementWindow(_ notification: Notification) {
+        if favouritesWindow == nil {
+            let allApps: [(String, NSImage?, String, String?)]
+            if let url = DirectoryAccess.restoreAccess() {
+                allApps = getAllScannedApps()
+                url.stopAccessingSecurityScopedResource()
+            } else {
+                allApps = getAllScannedApps()
+            }
+            let view = FavouritesManagementView(allApps: allApps)
+            let hostingController = NSHostingController(rootView: view)
+            favouritesWindow = NSWindow(contentViewController: hostingController)
+            favouritesWindow?.title = "Manage Favourites"
+            favouritesWindow?.setContentSize(NSSize(width: 650, height: 450))
+        } else {
+            let allApps: [(String, NSImage?, String, String?)]
+            if let url = DirectoryAccess.restoreAccess() {
+                allApps = getAllScannedApps()
+                url.stopAccessingSecurityScopedResource()
+            } else {
+                allApps = getAllScannedApps()
+            }
+            let view = FavouritesManagementView(allApps: allApps)
+            favouritesWindow?.contentViewController = NSHostingController(rootView: view)
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        favouritesWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private func getAllScannedApps() -> [(String, NSImage?, String, String?)] {
+        let fileManager = FileManager.default
+        let userAppsDir = URL.userHome.path + "/Applications"
+        let chromeAppsDirs = [
+            userAppsDir + "/Chrome Apps.localized/",
+            userAppsDir + "/Brave Browser Apps.localized/",
+            userAppsDir + "/Edge Apps.localized/",
+            userAppsDir + "/Opera Apps.localized/",
+            userAppsDir + "/Vivaldi Apps.localized/"
+        ]
+        let appDirectories = ["/Applications", "/System/Applications", userAppsDir]
+
+        var allApps = [(String, NSImage?, String, String?)]()
+
+        for appDir in appDirectories {
+            do {
+                guard fileManager.fileExists(atPath: appDir) else { continue }
+                let appContents = try fileManager.contentsOfDirectory(atPath: appDir)
+                for appName in appContents where appName.hasSuffix(".app") {
+                    let appPath = appDir + "/" + appName
+                    let (_, appDisplayName, icon, bundleID) = fetchAppDetails(atPath: appPath)
+                    allApps.append((appDisplayName, icon, appPath, bundleID))
+                }
+            } catch {
+                continue
+            }
+        }
+
+        for chromeAppsDir in chromeAppsDirs {
+            do {
+                guard fileManager.fileExists(atPath: chromeAppsDir) else { continue }
+                let appContents = try fileManager.contentsOfDirectory(atPath: chromeAppsDir)
+                for appName in appContents where appName.hasSuffix(".app") {
+                    let appPath = chromeAppsDir + "/" + appName
+                    let (_, appDisplayName, icon, bundleID) = fetchAppDetails(atPath: appPath)
+                    allApps.append((appDisplayName, icon, appPath, bundleID))
+                }
+            } catch {
+                continue
+            }
+        }
+
+        return allApps
     }
 
     @objc func configureMenuBarItem() {
@@ -402,10 +497,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // TODO: If needed, add Chrome Apps here
 
         print("appDirectories: \(appDirectories)") // Debug log
-        var appGroups = [String: [(String, NSImage?, String)]]() // Store the full path
-        var allApps = [(String, NSImage?, String)]() // Array to hold all apps
-        var chromeApps = [(String, NSImage?, String)]() // Array to hold chrome apps
-        
+        var appGroups = [String: [(String, NSImage?, String, String?)]]() // Store the full path
+        var allApps = [(String, NSImage?, String, String?)]() // Array to hold all apps
+        var chromeApps = [(String, NSImage?, String, String?)]() // Array to hold chrome apps
+
         let caseInsensitiveSorting = UserDefaults.standard.bool(forKey: "caseInsensitiveAppsSorting")
 //        let listSubDirsRecursively = UserDefaults.standard.bool(forKey: "listAppsFromSubDirsRecursively")
 
@@ -415,11 +510,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 for appName in appContents where appName.hasSuffix(".app") {
                     let appPath = appDir + "/" + appName
                     print("Checking app at path: \(appPath)") // Debug log
-                    let (category, appName, icon) = fetchAppDetails(atPath: appPath)
+                    let (category, appDisplayName, icon, bundleID) = fetchAppDetails(atPath: appPath)
                     let humanReadableCategory = makeHumanReadable(category)
-                    appGroups[humanReadableCategory, default: []].append((appName, icon, appPath)) // Store full path here
+                    appGroups[humanReadableCategory, default: []].append((appDisplayName, icon, appPath, bundleID)) // Store full path here
                     // Add to the 'All' category
-                    allApps.append((appName, icon, appPath))
+                    allApps.append((appDisplayName, icon, appPath, bundleID))
                 }
             } catch {
                 print("Error reading applications directory (\(appDir)): \(error)")
@@ -432,9 +527,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 for appName in appContents where appName.hasSuffix(".app") {
                     let appPath = chromeAppsDir + "/" + appName
                     print("Checking app at path: \(appPath)") // Debug log
-                    let (category, appName, icon) = fetchAppDetails(atPath: appPath)
+                    let (category, appDisplayName, icon, bundleID) = fetchAppDetails(atPath: appPath)
                     let humanReadableCategory = makeHumanReadable(category)
-                    chromeApps.append((appName, icon, appPath)) // Store full path here
+                    chromeApps.append((appDisplayName, icon, appPath, bundleID)) // Store full path here
                 }
             } catch {
                 print("Error reading applications directory (\(chromeAppsDir)): \(error)")
@@ -444,10 +539,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Add 'All' category
 //        appGroups["All"] = allApps
 
+        // Favourites section - include both regular apps and Chrome apps
+        let allAppsWithChrome = allApps + chromeApps
+        let favouriteApps = FavouritesManager.shared.getValidFavourites(from: allAppsWithChrome)
+        if !favouriteApps.isEmpty {
+            let favouritesGroupMenu = NSMenu()
+            let sortedFavourites = favouriteApps.sorted(by: {
+                if caseInsensitiveSorting {
+                    return $0.0.localizedCaseInsensitiveCompare($1.0) == .orderedAscending
+                } else {
+                    return $0.0 < $1.0
+                }
+            })
+            for (appName, icon, fullPath, _) in sortedFavourites {
+                let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
+                menuItem.target = self
+                if let iconImage = icon {
+                    menuItem.image = resizeImage(image: iconImage, w: 20, h: 20)
+                }
+                menuItem.representedObject = fullPath
+                favouritesGroupMenu.addItem(menuItem)
+            }
+            let favouritesMenuItem = NSMenuItem(title: "Favourites", action: nil, keyEquivalent: "")
+            favouritesMenuItem.submenu = favouritesGroupMenu
+            menu?.addItem(favouritesMenuItem)
+            menu?.addItem(NSMenuItem.separator())
+        }
+
         // Now proceed to populate the menu with grouped apps
         for (category, apps) in appGroups.sorted(by: { $0.key < $1.key }) {
             let groupMenu = NSMenu()
-            
+
             // Sorting apps
             let sortedApps = apps.sorted(by: {
                 if caseInsensitiveSorting {
@@ -458,7 +580,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             })
             
             // Render menu items
-            for (appName, icon, fullPath) in sortedApps {
+            for (appName, icon, fullPath, _) in sortedApps {
                 let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
                 menuItem.target = self
                 if let iconImage = icon {
@@ -490,7 +612,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             })
             
             // Render menu items
-            for (appName, icon, fullPath) in sortedChromeApps {
+            for (appName, icon, fullPath, _) in sortedChromeApps {
                 let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
                 menuItem.target = self
                 if let iconImage = icon {
@@ -506,7 +628,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Add a separator line
         menu?.addItem(NSMenuItem.separator())
-        
+
         // All apps
         let allGroupMenu = NSMenu()
 
@@ -518,9 +640,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return $0.0 < $1.0
             }
         })
-        
+
         // Render menu items
-        for (appName, icon, fullPath) in sortedAllApps {
+        for (appName, icon, fullPath, _) in sortedAllApps {
             let menuItem = NSMenuItem(title: appName, action: #selector(openApp(_:)), keyEquivalent: "")
             menuItem.target = self
             if let iconImage = icon {
@@ -558,7 +680,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // Refresh menu action
-    @objc func refreshMenu(_ sender: NSMenuItem) {
+    @objc func refreshMenu(_ sender: Any?) {
         menu?.removeAllItems()
         if let url = DirectoryAccess.restoreAccess() {
             // Use the URL to access the directory
@@ -575,14 +697,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.terminate(self)
     }
 
-    func fetchAppDetails(atPath path: String) -> (String, String, NSImage?) {
+    func fetchAppDetails(atPath path: String) -> (String, String, NSImage?, String?) {
         let infoPlistPath = path + "/Contents/Info.plist"
         var category = "Other"
         var appName: String?
         var icon: NSImage? = nil
+        var bundleID: String? = nil
 
         if let infoPlist = NSDictionary(contentsOfFile: infoPlistPath) {
             appName = infoPlist["CFBundleName"] as? String ?? infoPlist["CFBundleDisplayName"] as? String
+            bundleID = infoPlist["CFBundleIdentifier"] as? String
 
             let iconFileName = infoPlist["CFBundleIconFile"] as? String ?? ""
             let iconFilePathWithoutExtension = path + "/Contents/Resources/" + iconFileName
@@ -602,18 +726,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if appName == nil {
-            // Use the filename of the app bundle as a fallback for app name
             appName = (path as NSString).lastPathComponent.replacingOccurrences(of: ".app", with: "")
             appName = makeHumanReadableFromFilename(appName!)
         }
 
         if icon == nil {
-            // Fallback to using system generic app icon
             let appURL = URL(fileURLWithPath: path)
             icon = NSWorkspace.shared.icon(forFile: appURL.path)
         }
 
-        return (category, appName ?? "Unknown App", icon)
+        return (category, appName ?? "Unknown App", icon, bundleID)
     }
 
     func makeHumanReadable(_ category: String) -> String {
