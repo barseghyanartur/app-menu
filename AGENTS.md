@@ -1,6 +1,6 @@
 # AGENTS.md — app-menu
 
-**Repository**: https://github.com/barseghyanartur/app-menu  
+**Repository**: <https://github.com/barseghyanartur/app-menu>
 **Maintainer**: Artur Barseghyan <artur.barseghyan@gmail.com>
 
 ---
@@ -62,7 +62,7 @@ networking.
 ### 3.1 Class / struct map
 
 | Symbol | Kind | Responsibility |
-|---|---|---|
+| --- | --- | --- |
 | `URL.userHome` / `URL.userHomePath` | Extension | Resolves `~` via `getpwuid` (sandbox-safe) |
 | `DirectoryAccess` | Class (static methods) | Security-scoped bookmark lifecycle |
 | `AppDelegate` | `NSObject, NSApplicationDelegate` | Status bar item, menu population, window management |
@@ -95,12 +95,14 @@ applicationDidFinishLaunching
 ### 3.3 UserDefaults keys
 
 | Key | Type | Default | Used by |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `menuBarOption` | `Int` | `0` | `AppDelegate.configureMenuBarItem()` — 0=Text, 1=Icon, 2=Text+Icon |
 | `caseInsensitiveAppsSorting` | `Bool` | `false` | Sort comparator in `populateMenu()` |
 | `showChromeApps` | `Bool` | `false` | Chrome-apps submenu block in `populateMenu()` |
 | `userSelectedDirectory` | `Data` | absent | Security-scoped bookmark for `~/Applications` |
 | `listAppsFromSubDirsRecursively` | `Bool` | `false` | **Not yet active** — toggled UI is commented out |
+| `showFavourites` | `Bool` | `false` | FavouritesManager.showFavourites / `@AppStorage` in ApplicationMenuApp |
+| `favouriteAppBundleIDs` | `[String]` | `[]` | FavouritesManager.favouriteAppBundleIDs |
 
 ### 3.4 Notification
 
@@ -135,7 +137,7 @@ the `make` equivalents in practice.
 ### Common make targets
 
 | Command | What it does |
-|---|---|
+| --- | --- |
 | `make build` | Compile Debug build (smoke-check) |
 | `make test` | Run unit + UI tests |
 | `make test-unit` | Run unit tests only (faster) |
@@ -197,7 +199,7 @@ requires 14+ must be wrapped in `if #available(macOS 14, *) { ... }`.
 Tests run automatically on every push and pull request via `.github/workflows/test.yml`.
 
 | Runner | Status |
-|--------|--------|
+| --- | --- |
 | macOS 26 (Tahoe) | Tested |
 | macOS 15 (Sequoia) | Tested |
 | macOS 14 (Sonoma) | Tested |
@@ -215,7 +217,7 @@ These are documented so that an agent does not "fix" them in a way that
 introduces new problems.
 
 | Issue | Location | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `SettingsWindowController.swift` contains a duplicate `AppDelegate` | `SettingsWindowController.swift` | File is excluded from the compile target. The correct fix is to delete the file entirely after verifying nothing references it. |
 | `ContentView.swift` is unused | `ContentView.swift` | The app is menu-bar only; `ContentView` is never presented. It is safe to delete. |
 | `listAppsFromSubDirsRecursively` setting is wired up in `UserDefaults` but the corresponding scan logic is commented out | `ApplicationMenuApp.swift` | Implement recursive directory traversal or remove the key entirely. |
@@ -280,3 +282,16 @@ with the `Picker` tag values in `AppearanceSettingsView`:
 - Do not add outbound network calls to the main application target.
 - Do not hand-edit `ApplicationMenu.xcodeproj/project.pbxproj`; use Xcode's
   project editor or `xcodebuild` settings.
+
+---
+
+## 10. Design Decisions
+
+### `saveSettings()` posts both `MenuOptionChanged` and `FavouritesChanged`
+
+`SettingsView.saveSettings()` intentionally posts both notifications on every
+"Apply" action, even when the active tab is unrelated to favourites. This is
+by design: a single Apply click should trigger a full menu refresh (including
+the favourites section) so the user sees changes immediately without needing an
+additional manual "Refresh" action. Do NOT flag this as a redundant or
+incorrect notification post.
