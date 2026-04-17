@@ -314,7 +314,7 @@ struct VersionView: View {
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem?
     var menu: NSMenu?
     var settingsWindow: NSWindow?
@@ -377,33 +377,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func openFavouritesManagementWindow(_ notification: Notification) {
+        let allApps = restoreAndScanApps()
+
         if favouritesWindow == nil {
-            let allApps: [(String, NSImage?, String, String?)]
-            if let url = DirectoryAccess.restoreAccess() {
-                allApps = getAllScannedApps()
-                url.stopAccessingSecurityScopedResource()
-            } else {
-                allApps = getAllScannedApps()
-            }
             let view = FavouritesManagementView(allApps: allApps)
             let hostingController = NSHostingController(rootView: view)
             favouritesWindow = NSWindow(contentViewController: hostingController)
             favouritesWindow?.title = "Manage Favourites"
             favouritesWindow?.setContentSize(NSSize(width: 650, height: 450))
+            favouritesWindow?.delegate = self
         } else {
-            let allApps: [(String, NSImage?, String, String?)]
-            if let url = DirectoryAccess.restoreAccess() {
-                allApps = getAllScannedApps()
-                url.stopAccessingSecurityScopedResource()
-            } else {
-                allApps = getAllScannedApps()
-            }
             let view = FavouritesManagementView(allApps: allApps)
             favouritesWindow?.contentViewController = NSHostingController(rootView: view)
         }
 
         NSApp.activate(ignoringOtherApps: true)
         favouritesWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private func restoreAndScanApps() -> [(String, NSImage?, String, String?)] {
+        if let url = DirectoryAccess.restoreAccess() {
+            let apps = getAllScannedApps()
+            url.stopAccessingSecurityScopedResource()
+            return apps
+        } else {
+            return getAllScannedApps()
+        }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === favouritesWindow {
+            favouritesWindow = nil
+        }
     }
 
     private func getAllScannedApps() -> [(String, NSImage?, String, String?)] {
