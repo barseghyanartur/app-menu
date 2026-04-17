@@ -95,6 +95,7 @@ final class FavouritesManager: ObservableObject {
     }
 
     func getValidFavouriteAppIDs(from apps: [(String, NSImage?, String, String?)]) -> [AppItem] {
+        guard showFavourites else { return [] }
         let favouriteIDs = Set(favouriteAppBundleIDs)
         return apps.compactMap { app in
             guard let bundleID = app.3, !bundleID.isEmpty, favouriteIDs.contains(bundleID) else { return nil }
