@@ -183,8 +183,7 @@ This runs the full pipeline in order:
 1. `make archive` — `xcodebuild archive` → `Releases/archive/ApplicationMenu.xcarchive`
 2. `make export`  — `xcodebuild -exportArchive` (Copy App method) → `Releases/export/ApplicationMenu.app`
 3. `make dmg`     — stages `.app` + `/Applications` symlink, calls `hdiutil` → `Releases/dist/ApplicationMenu.dmg`
-4. `make zip`     — `ditto -ck` → `Releases/dist/ApplicationMenu.zip`
-5. `make checksum`— `shasum -a 256` → printed to stdout and saved to `Releases/dist/ApplicationMenu.zip.sha256`
+4. `make checksum`— `shasum -a 256` → printed to stdout and saved to `Releases/dist/ApplicationMenu.dmg.sha256`
 
 At the end, the Makefile prints the SHA-256 and the three manual steps that
 remain (git tag, GitHub release upload, tap formula update).

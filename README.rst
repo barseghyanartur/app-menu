@@ -43,9 +43,9 @@ Install using ``brew``
 
 Install manually
 ----------------
-Go to `Releases`_ and download the latest ``ApplicationMenu.zip`` file, 
-unpack it, open the extracted ``ApplicationMenu.dmg`` and simply drag the 
-``ApplicationMenu`` into the ``Applications`` directory.
+Go to `Releases`_ and download the latest ``ApplicationMenu.dmg`` file, 
+open it, and simply drag the ``ApplicationMenu`` into the ``Applications`` 
+directory.
 
 .. image:: Docs/app_menu_installation.jpg
   :width: 400
