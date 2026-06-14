@@ -184,9 +184,11 @@ This runs the full pipeline in order:
 2. `make export`  — `xcodebuild -exportArchive` (Copy App method) → `Releases/export/ApplicationMenu.app`
 3. `make dmg`     — stages `.app` + `/Applications` symlink, calls `hdiutil` → `Releases/dist/ApplicationMenu.dmg`
 4. `make checksum`— `shasum -a 256` → printed to stdout and saved to `Releases/dist/ApplicationMenu.dmg.sha256`
+5. `make tap`     — generates `Releases/tap/app-menu.rb`
+6. `make publish` — tags the current git commit, pushes the tag, and creates a GitHub release with the DMG asset
 
-At the end, the Makefile prints the SHA-256 and the three manual steps that
-remain (git tag, GitHub release upload, tap formula update).
+At the end, the Makefile prints the SHA-256 and the `make publish` target
+automates the rest.
 
 ### Deployment target
 
