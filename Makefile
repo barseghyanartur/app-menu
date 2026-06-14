@@ -16,9 +16,9 @@
 #   make archive        Build Release .xcarchive → Releases/archive/
 #   make export         Extract .app from archive → Releases/export/
 #   make dmg            Build installer .dmg     → Releases/dist/
-#   make zip            Wrap .dmg in ZIP          → Releases/dist/
 #   make checksum       Print + save SHA-256      → Releases/dist/
-#   make release        Full pipeline (archive → export → dmg → zip → checksum)
+#   make release        Full pipeline (archive → export → dmg → checksum → tap)
+#   make publish        Tag, push, and create GitHub release with DMG asset
 #   make version        Print current MARKETING_VERSION
 #   make bump V=0.2.0   Set a new version in the project file
 #   make clean          Remove all generated artefacts
@@ -48,8 +48,7 @@ DIST_DIR     := $(RELEASES_DIR)/dist
 ARCHIVE_PATH := $(ARCHIVE_DIR)/$(APP_NAME).xcarchive
 APP_PATH     := $(EXPORT_DIR)/$(APP_NAME).app
 DMG_PATH     := $(DIST_DIR)/$(APP_NAME).dmg
-ZIP_PATH     := $(DIST_DIR)/$(APP_NAME).zip
-SHASUM_PATH  := $(DIST_DIR)/$(APP_NAME).zip.sha256
+SHASUM_PATH  := $(DIST_DIR)/$(APP_NAME).dmg.sha256
 
 # Temporary exportOptions.plist (written at export time, removed afterwards)
 EXPORT_OPTS  := $(RELEASES_DIR)/.exportOptions.plist
@@ -76,8 +75,8 @@ endif
 # ---------------------------------------------------------------------------
 # Phony targets
 # ---------------------------------------------------------------------------
-.PHONY: all build test test-unit archive export dmg zip checksum tap release \
-         version bump open clean help
+.PHONY: all build test test-unit archive export dmg checksum tap release \
+         publish version bump open clean help
 
 all: help
 
@@ -179,22 +178,11 @@ dmg:
 	  "$(DMG_PATH)"
 	@echo "→ DMG: $(DMG_PATH)"
 
-## zip: Wrap the .dmg in a ZIP archive (required format for the Homebrew cask)
-zip:
+## checksum: Compute and save the SHA-256 of the DMG (paste into the tap formula)
+checksum:
 	@test -f "$(DMG_PATH)" || \
 	  (echo "No .dmg found at $(DMG_PATH). Run 'make dmg' first."; exit 1)
-	@mkdir -p "$(DIST_DIR)"
-	@# ditto -ck produces a macOS-native ZIP with no resource-fork noise.
-	@# The result is a ZIP containing just ApplicationMenu.dmg at its root,
-	@# which is the format the tap formula (and GitHub releases) expect.
-	ditto -ck "$(DMG_PATH)" "$(ZIP_PATH)"
-	@echo "→ ZIP: $(ZIP_PATH)"
-
-## checksum: Compute and save the SHA-256 of the ZIP (paste into the tap formula)
-checksum:
-	@test -f "$(ZIP_PATH)" || \
-	  (echo "No ZIP found at $(ZIP_PATH). Run 'make zip' first."; exit 1)
-	@shasum -a 256 "$(ZIP_PATH)" | tee "$(SHASUM_PATH)"
+	@shasum -a 256 "$(DMG_PATH)" | tee "$(SHASUM_PATH)"
 	@echo "→ Checksum saved: $(SHASUM_PATH)"
 
 ## tap: Generate Homebrew tap cask files → Releases/tap/
@@ -206,49 +194,23 @@ tap: checksum
 	  echo "  version \"$(VERSION)\"" ; \
 	  echo "  sha256 \"$$SHA256\"" ; \
 	  echo '' ; \
-	  echo "  url \"https://github.com/barseghyanartur/app-menu/releases/download/$(VERSION)/ApplicationMenu.zip\"" ; \
+	  echo "  url \"https://github.com/barseghyanartur/app-menu/releases/download/$(VERSION)/ApplicationMenu.dmg\"" ; \
 	  echo '  name "App Menu"' ; \
-	  echo '  desc "The missing Applications Menu for macOS."' ; \
+	  echo '  desc "The missing Applications Menu for macOS"' ; \
 	  echo '  homepage "https://github.com/barseghyanartur/app-menu"' ; \
 	  echo '' ; \
-	  echo '  container type: :naked' ; \
-	  echo '' ; \
-	  echo '  stage_only true' ; \
-	  echo '' ; \
-	  echo '  postflight do' ; \
-	  echo '    zip_path = "#{staged_path}/ApplicationMenu.zip"' ; \
-	  echo '    extract_dir = "#{staged_path}/extracted"' ; \
-	  echo '' ; \
-	  echo '    system_command "unzip", args: ["-d", extract_dir, zip_path]' ; \
-	  echo '' ; \
-	  echo '    dmg_path = "#{extract_dir}/ApplicationMenu.dmg"' ; \
-	  echo '' ; \
-	  echo '    if File.exist?(dmg_path)' ; \
-	  echo '      system_command "hdiutil",' ; \
-	  echo '                     args: ["attach", "-nobrowse", dmg_path]' ; \
-	  echo '' ; \
-	  echo '      if File.exist?("/Applications/ApplicationMenu.app")' ; \
-	  echo '        system_command "rm", args: ["-rf", "/Applications/ApplicationMenu.app"]' ; \
-	  echo '      end' ; \
-	  echo '' ; \
-	  echo '      system_command "cp", ' ; \
-	  echo '                     args: ["-r", "/Volumes/ApplicationMenu/ApplicationMenu.app", "/Applications/"]' ; \
-	  echo '' ; \
-	  echo '      system_command "hdiutil",' ; \
-	  echo '                     args: ["detach", "/Volumes/ApplicationMenu"]' ; \
-	  echo '    else' ; \
-	  echo '      raise "DMG file not found: #{dmg_path}"' ; \
-	  echo '    end' ; \
+	  echo '  livecheck do' ; \
+	  echo '    url :url' ; \
+	  echo '    strategy :github_latest' ; \
 	  echo '  end' ; \
 	  echo '' ; \
-	  echo '  uninstall delete: "/Applications/ApplicationMenu.app"' ; \
+	  echo '  app "ApplicationMenu.app"' ; \
 	  echo 'end' \
 	) > "$(RELEASES_DIR)/tap/app-menu.rb" && \
-	sed "s/app-menu\" do/app-menu@$(VERSION)\" do/" "$(RELEASES_DIR)/tap/app-menu.rb" > "$(RELEASES_DIR)/tap/app-menu@$(VERSION).rb" && \
-	echo "→ Tap files: $(RELEASES_DIR)/tap/"
+	echo "→ Tap file: $(RELEASES_DIR)/tap/app-menu.rb"
 
-## release: Full pipeline — archive → export → dmg → zip → checksum → tap
-release: archive export dmg zip checksum tap
+## release: Full pipeline — archive → export → dmg → checksum → tap
+release: archive export dmg checksum tap
 	@echo ""
 	@echo "╔══════════════════════════════════════════════════════╗"
 	@echo "║  Release artefacts ready — v$(VERSION)"
@@ -256,17 +218,27 @@ release: archive export dmg zip checksum tap
 	@echo "║  Archive  : $(ARCHIVE_PATH)"
 	@echo "║  App      : $(APP_PATH)"
 	@echo "║  DMG      : $(DMG_PATH)"
-	@echo "║  ZIP      : $(ZIP_PATH)"
 	@echo "║  SHA-256  : $$(awk '{print $$1}' $(SHASUM_PATH))"
-	@echo "║  Tap      : $(RELEASES_DIR)/tap/app-menu.rb"
-	@echo "║            $(RELEASES_DIR)/tap/app-menu@$(VERSION).rb"
+	@echo "║  Cask     : $(RELEASES_DIR)/tap/app-menu.rb"
 	@echo "╠══════════════════════════════════════════════════════╣"
 	@echo "║  Next steps:"
+	@echo "║  make publish   (tags, pushes, creates GitHub release)"
+	@echo "║  OR manually:"
 	@echo "║  1. git tag $(VERSION) && git push --tags"
-	@echo "║  2. Upload $(APP_NAME).zip to the GitHub release"
-	@echo "║  3. Copy tap files to your Homebrew tap repo:"
-	@echo "║       cp Releases/tap/*.rb /path/to/your-tap/Casks/"
+	@echo "║  2. Upload $(APP_NAME).dmg to the GitHub release"
+	@echo "║  3. Copy $(RELEASES_DIR)/tap/app-menu.rb to your tap's Casks/"
 	@echo "╚══════════════════════════════════════════════════════╝"
+
+## publish: Tag, push, and create a GitHub release with the DMG asset
+publish:
+	@test -f "$(DMG_PATH)" || \
+	  (echo "No .dmg found at $(DMG_PATH). Run 'make release' first."; exit 1)
+	@git tag "$(VERSION)"
+	@git push origin $(VERSION)
+	gh release create "$(VERSION)" "$(DMG_PATH)" \
+	  --title "$(VERSION)" \
+	  --latest
+	@echo "→ GitHub release created: $(VERSION)"
 
 # ---------------------------------------------------------------------------
 # Utility
