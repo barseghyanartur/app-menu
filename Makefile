@@ -234,7 +234,7 @@ publish:
 	@test -f "$(DMG_PATH)" || \
 	  (echo "No .dmg found at $(DMG_PATH). Run 'make release' first."; exit 1)
 	@git tag "$(VERSION)"
-	@git push --tags
+	@git push origin $(VERSION)
 	gh release create "$(VERSION)" "$(DMG_PATH)" \
 	  --title "$(VERSION)" \
 	  --latest
