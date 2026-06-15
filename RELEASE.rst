@@ -6,22 +6,27 @@ Archive the application
 =======================
 #. Xcode -> Product -> Build
 #. Xcode -> Product -> Archive : Distribute App -> Custom -> Copy App : Export
-#. Create another directory `ApplicationMenuInstaller` in the directory where your `ApplicationMenu.app` was created.
-#. Move the `ApplicationMenu.app` into that directory.
-#. Create an alias from `/Applications` directory: Finder -> Macintosh HD -> `Ctrl + Click` on the `Applications` -> Make Alias.
-#. Move the created alias from `/Users/me/Desktop` into `ApplicationMenuInstaller`.
-#. Create a dmg archive:
+#. Run the release pipeline:
 
    .. code-block:: sh
 
-	  hdiutil create -volname "ApplicationMenu" -srcfolder ApplicationMenuInstaller -ov -format UDZO ApplicationMenu.dmg
+       make release
 
-#. Pack the `ApplicationMenu.dmg` into a ZIP archive (using `Double Commander`).
+   This builds the archive, exports the .app, creates the DMG, computes the
+   SHA-256 checksum, and generates the Homebrew cask file.
 
 Calculate shasum for tap
 ========================
-#. Calculate the shasum for the `ApplicationMenu.zip` archive:
+The ``make release`` target computes the checksum automatically. The SHA-256
+is printed to stdout and saved to ``Releases/dist/ApplicationMenu.dmg.sha256``.
+
+Manual steps after ``make release``
+====================================
+#. Tag and push:
 
    .. code-block:: sh
-   
-       shasum -a 256 ApplicationMenu.zip
+
+       git tag <version> && git push --tags
+
+#. Upload ``Releases/dist/ApplicationMenu.dmg`` to the GitHub release.
+#. Copy ``Releases/tap/app-menu.rb`` to your Homebrew tap's ``Casks/`` directory.
